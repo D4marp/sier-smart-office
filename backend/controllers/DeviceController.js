@@ -2,15 +2,6 @@ const Device = require('../models/Device');
 const Consumption = require('../models/Consumption');
 const net = require('net');
 
-// Mapping kelas ke port TCP In Node-RED LoRa Gateway
-const CLASS_PORTS = {
-  q10102: { className: "Q1.01.02", tcpPort: 5102 },
-  q10103: { className: "Q1.01.03", tcpPort: 5103 },
-  q10104: { className: "Q1.01.04", tcpPort: 5104 },
-  q10109: { className: "Q1.01.09", tcpPort: 5109 },
-  q10111: { className: "Q1.01.11", tcpPort: 5111 }
-};
-
 // Target hosts and ports for dynamic control of ac, lamp, and projector
 const LAMP_GATEWAY_HOST = process.env.LAMP_GATEWAY_HOST || process.env.GATEWAY_HOST || "10.12.1.150";
 const MINI_PC_NODE_RED_HOST = process.env.MINI_PC_NODE_RED_HOST || "127.0.0.1";
@@ -493,7 +484,7 @@ class DeviceController {
       let nodeRedData = null;
       try {
         nodeRedData = await nodeRedResponse.json();
-      } catch (e) {
+      } catch {
         nodeRedData = null;
       }
 
@@ -644,7 +635,7 @@ class DeviceController {
       let nodeRedData = null;
       try {
         nodeRedData = await nodeRedResponse.json();
-      } catch (e) {
+      } catch {
         nodeRedData = null;
       }
 

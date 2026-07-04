@@ -19,7 +19,7 @@ function requireAuth(req, res, next) {
     const payload = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key_change_this');
     req.user = payload;
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 }

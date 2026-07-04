@@ -131,6 +131,7 @@ export default function RektoratDashboard() {
   }, [monthlyData])
   const [fbsRows, setFbsRows] = useState<RoomRow[]>(FBS_DEVICES)
   const [classControlLoading, setClassControlLoading] = useState<Record<string, boolean>>({})
+  const [deviceControlLoading, setDeviceControlLoading] = useState<Record<number, boolean>>({})
   const [chartMode, setChartMode] = useState<'daily' | 'monthly'>('daily')
   const [controlError, setControlError] = useState<string | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -289,17 +290,19 @@ export default function RektoratDashboard() {
   const totalDevices = liveDevices.length + fbsRows.length
   const totalActive = psiOnline.length + fbsRows.filter(d => d.status === 'online').length
 
-  // Live rows from Psikologi
-  const liveRows: RoomRow[] = liveDevices.map(d => ({
-    faculty: 'Psikologi',
-    room: d.location,
-    device: d.device_name,
-    type: d.device_type,
-    power: parseFloat(String(d.current_power)) || 0,
-    status: isDeviceOnline(d) ? 'online' : 'offline',
-    deviceId: d.id,
-    location: d.location,
-  }))
+  // Live rows from Psikologi (excluding sensors)
+  const liveRows: RoomRow[] = liveDevices
+    .filter(d => d.device_type !== 'SENSOR')
+    .map(d => ({
+      faculty: 'Psikologi',
+      room: d.location,
+      device: d.device_name,
+      type: d.device_type,
+      power: parseFloat(String(d.current_power)) || 0,
+      status: isDeviceOnline(d) ? 'online' : 'offline',
+      deviceId: d.id,
+      location: d.location,
+    }))
 
   // Convert FBS rows to match RoomRow
   const fbsRowsMapped: RoomRow[] = fbsRows.map(r => ({
@@ -334,12 +337,24 @@ export default function RektoratDashboard() {
     }
   }
 
-  const handleDummyDeviceToggle = (deviceId: number, action: 'on' | 'off') => {
-    setLiveDevices(prev => prev.map(d =>
-      d.id === deviceId
-        ? { ...d, status: action === 'on' ? 'active' : 'offline', iot_status: action === 'on' ? 'active' : 'offline' }
-        : d
-    ))
+
+  const handleDeviceControl = async (deviceId: number, action: 'on' | 'off') => {
+    try {
+      setDeviceControlLoading(prev => ({ ...prev, [deviceId]: true }))
+      setControlError(null)
+      await devicesAPI.control(deviceId, action)
+      // Update local state immediately for fast feedback
+      setLiveDevices(prev => prev.map(d =>
+        d.id === deviceId
+          ? { ...d, status: action === 'on' ? 'active' : 'offline', iot_status: action === 'on' ? 'active' : 'offline' }
+          : d
+      ))
+    } catch (err) {
+      console.error('Failed to control device:', err)
+      setControlError(err instanceof Error ? err.message : 'Gagal mengontrol perangkat')
+    } finally {
+      setDeviceControlLoading(prev => ({ ...prev, [deviceId]: false }))
+    }
   }
 
   const handleFbsDeviceToggle = (deviceName: string) => {
@@ -367,11 +382,6 @@ export default function RektoratDashboard() {
       backgroundAttachment: 'fixed'
     }}>
       
-      {/* Google Fonts Link */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-
       {/* Sidebar */}
       <aside
         className={`${
@@ -823,6 +833,8 @@ export default function RektoratDashboard() {
                                 ? 'bg-orange-50 text-orange-700 border-orange-200' 
                                 : row.type === 'LAMP' 
                                 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' 
+                                : row.type === 'PROJECTOR'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
                                 : 'bg-blue-50 text-blue-700 border-blue-200'
                             }`}>{row.type}</span>
                           </td>
@@ -850,46 +862,31 @@ export default function RektoratDashboard() {
                                 <Power size={11} />
                                 <span>{row.status === 'online' ? 'Matikan' : 'Nyalakan'}</span>
                               </button>
-                            ) : ['ac', 'projector'].includes(String(row.type).toLowerCase()) ? (
+                            ) : row.type === 'SENSOR' ? (
+                              <span className="text-slate-400 text-xs font-medium">—</span>
+                            ) : (
                               <div className="flex items-center space-x-1.5">
                                 <button
-                                  onClick={() => row.deviceId && handleDummyDeviceToggle(row.deviceId, 'on')}
-                                  disabled={row.status === 'online'}
+                                  onClick={() => row.deviceId && handleDeviceControl(row.deviceId, 'on')}
+                                  disabled={(row.deviceId ? deviceControlLoading[row.deviceId] : false) || row.status === 'online'}
                                   className={`px-2 py-1 rounded text-white text-xs font-bold transition-all shadow-sm active:scale-95 duration-200 ${
                                     row.status === 'online'
                                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                                       : 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-md'
                                   }`}
                                 >
-                                  ON
+                                  {row.deviceId && deviceControlLoading[row.deviceId] ? '...' : 'ON'}
                                 </button>
                                 <button
-                                  onClick={() => row.deviceId && handleDummyDeviceToggle(row.deviceId, 'off')}
-                                  disabled={row.status !== 'online'}
+                                  onClick={() => row.deviceId && handleDeviceControl(row.deviceId, 'off')}
+                                  disabled={(row.deviceId ? deviceControlLoading[row.deviceId] : false) || row.status !== 'online'}
                                   className={`px-2 py-1 rounded text-white text-xs font-bold transition-all shadow-sm active:scale-95 duration-200 ${
                                     row.status !== 'online'
                                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                                       : 'bg-red-600 hover:bg-red-700 hover:shadow-md'
                                   }`}
                                 >
-                                  OFF
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center space-x-1.5">
-                                <button
-                                  onClick={() => row.location && handleLiveClassControl(row.location, 'on')}
-                                  disabled={row.location ? classControlLoading[row.location] : false}
-                                  className="px-2.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50"
-                                >
-                                  ON
-                                </button>
-                                <button
-                                  onClick={() => row.location && handleLiveClassControl(row.location, 'off')}
-                                  disabled={row.location ? classControlLoading[row.location] : false}
-                                  className="px-2.5 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all disabled:opacity-50"
-                                >
-                                  OFF
+                                  {row.deviceId && deviceControlLoading[row.deviceId] ? '...' : 'OFF'}
                                 </button>
                               </div>
                             )}

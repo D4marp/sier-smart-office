@@ -277,15 +277,15 @@ SELECT id, 'LAMP-Q10111-001', 'Lighting Q1.01.11', 'LAMP', 'lighting-control', '
 
 -- Insert VS321 sensor devices (temperature + humidity)
 INSERT IGNORE INTO devices (class_id, device_eui, device_name, device_type, application_type, location, device_secret, power_rating, efficiency_rating, iot_status)
-SELECT id, 'VS321-Q10102-001', 'VS321 Sensor Q1.01.02', 'SENSOR', 'environment-sensor', 'Q1.01.02', 'secret_vs321_q10102_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.02'
+SELECT id, 'VS321-Q10102-001', 'Sensor Suhu Q1.01.02', 'SENSOR', 'environment-sensor', 'Q1.01.02', 'secret_vs321_q10102_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.02'
 UNION ALL
-SELECT id, 'VS321-Q10103-001', 'VS321 Sensor Q1.01.03', 'SENSOR', 'environment-sensor', 'Q1.01.03', 'secret_vs321_q10103_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.03'
+SELECT id, 'VS321-Q10103-001', 'Sensor Suhu Q1.01.03', 'SENSOR', 'environment-sensor', 'Q1.01.03', 'secret_vs321_q10103_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.03'
 UNION ALL
-SELECT id, 'VS321-Q10104-001', 'VS321 Sensor Q1.01.04', 'SENSOR', 'environment-sensor', 'Q1.01.04', 'secret_vs321_q10104_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.04'
+SELECT id, 'VS321-Q10104-001', 'Sensor Suhu Q1.01.04', 'SENSOR', 'environment-sensor', 'Q1.01.04', 'secret_vs321_q10104_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.04'
 UNION ALL
-SELECT id, 'VS321-Q10109-001', 'VS321 Sensor Q1.01.09', 'SENSOR', 'environment-sensor', 'Q1.01.09', 'secret_vs321_q10109_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.09'
+SELECT id, 'VS321-Q10109-001', 'Sensor Suhu Q1.01.09', 'SENSOR', 'environment-sensor', 'Q1.01.09', 'secret_vs321_q10109_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.09'
 UNION ALL
-SELECT id, 'VS321-Q10111-001', 'VS321 Sensor Q1.01.11', 'SENSOR', 'environment-sensor', 'Q1.01.11', 'secret_vs321_q10111_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.11';
+SELECT id, 'VS321-Q10111-001', 'Sensor Suhu Q1.01.11', 'SENSOR', 'environment-sensor', 'Q1.01.11', 'secret_vs321_q10111_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.11';
 
 -- Insert default settings
 INSERT INTO settings (setting_key, setting_value, data_type, description) VALUES

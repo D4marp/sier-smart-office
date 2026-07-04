@@ -11,7 +11,7 @@ import {
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { devicesAPI, consumptionAPI } from '@/lib/apiClient'
+import { devicesAPI, consumptionAPI, nodeRedControlAPI } from '@/lib/apiClient'
 import { useAuth } from '@/components/AuthProvider'
 
 interface Device {
@@ -289,23 +289,14 @@ export default function Dashboard() {
       return sum + (power > 0 ? power : (parseFloat(String(d.power_rating)) || 1.6))
     }, 0)
 
-    // Suhu AC rata-rata
-    const activeAcTemps = acDevices
-      .filter(d => (d.status === 'active' || d.status === 'online') && d.current_temperature)
-      .map(d => parseFloat(String(d.current_temperature)))
-    
-    const avgAcTemp = activeAcTemps.length > 0
-      ? (activeAcTemps.reduce((s, t) => s + t, 0) / activeAcTemps.length).toFixed(1)
-      : '24.0'
-
-    // Ambient Sensor rata-rata (VS321)
-    const activeSensorTemps = sensorDevices
+    // Suhu Rata-rata gabungan dari semua perangkat yang punya suhu
+    const allTemps = filteredDevices
       .filter(d => d.current_temperature && parseFloat(String(d.current_temperature)) > 0)
       .map(d => parseFloat(String(d.current_temperature)))
     
-    const avgSensorTemp = activeSensorTemps.length > 0
-      ? (activeSensorTemps.reduce((s, t) => s + t, 0) / activeSensorTemps.length).toFixed(1)
-      : '27.5'
+    const avgTemp = allTemps.length > 0
+      ? (allTemps.reduce((s, t) => s + t, 0) / allTemps.length).toFixed(1)
+      : '—'
 
     // Extract humidity from latest reading lists
     let latestHumidity = 78.5
@@ -325,8 +316,7 @@ export default function Dashboard() {
     return {
       liveAcPower,
       liveLampPower,
-      avgAcTemp,
-      avgSensorTemp,
+      avgTemp,
       latestHumidity,
       onlineDevicesCount,
       sensorCount: sensorDevices.length
@@ -349,18 +339,45 @@ export default function Dashboard() {
     }
   }
 
-  // Handles classroom control (turn all ON/OFF)
-  const handleClassroomControl = async (location: string, action: 'on' | 'off') => {
+
+  // Node-RED direct device type control
+  const [nodeRedLoading, setNodeRedLoading] = useState<Record<string, boolean>>({})
+
+  const handleNodeRedControl = async (classCode: string, deviceType: 'lamp' | 'ac' | 'projector', action: 'on' | 'off') => {
+    const key = `${classCode}-${deviceType}-${action}`
+    const nodeRedClassCode = classCode.toLowerCase().replace(/\./g, '')
     try {
-      setRefreshing(true)
-      await devicesAPI.controlByClass(location, action)
-      // Reload devices to catch new state
+      setNodeRedLoading(prev => ({ ...prev, [key]: true }))
+
+      // 1. Call physical Node-RED control
+      if (deviceType === 'lamp') {
+        await nodeRedControlAPI.controlLamp(nodeRedClassCode, action)
+      } else if (deviceType === 'ac') {
+        await nodeRedControlAPI.controlAC(nodeRedClassCode, action)
+      } else {
+        await nodeRedControlAPI.controlProjector(nodeRedClassCode, action)
+      }
+
+      // 2. Update database status so dashboard registers the change
+      const targetDbStatus = action === 'on' ? 'active' : 'idle'
+      const matchedDevices = devices.filter(d =>
+        d.location === classCode &&
+        (
+          (deviceType === 'lamp' && d.device_type === 'LAMP') ||
+          (deviceType === 'ac' && d.device_type === 'AC') ||
+          (deviceType === 'projector' && d.device_type === 'PROJECTOR')
+        )
+      )
+
+      await Promise.all(matchedDevices.map(d => devicesAPI.updateStatus(d.id, targetDbStatus)))
+
+      // 3. Reload devices from backend to refresh live power metrics on dashboard
       await loadDevices(true)
     } catch (err) {
-      console.error('Failed to control class devices:', err)
-      alert(err instanceof Error ? err.message : 'Gagal mengontrol ruangan')
+      console.error(`Failed to control ${deviceType} in ${classCode}:`, err)
+      alert(err instanceof Error ? err.message : `Gagal mengontrol ${deviceType} di ${classCode}`)
     } finally {
-      setRefreshing(false)
+      setNodeRedLoading(prev => ({ ...prev, [key]: false }))
     }
   }
 
@@ -422,11 +439,6 @@ export default function Dashboard() {
     }}>
       {/* Semi-transparent overlay */}
       <div className="absolute inset-0 bg-white/40 pointer-events-none z-0" />
-
-      {/* Google Fonts Link */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* Sidebar */}
       <aside
@@ -678,7 +690,7 @@ export default function Dashboard() {
             />
             <KPICard
               title="Suhu Rata-rata"
-              value={`${currentStats.avgSensorTemp} °C`}
+              value={`${currentStats.avgTemp} °C`}
               change={`${currentStats.latestHumidity.toFixed(1)}% RH`}
               icon={<Activity className="text-teal-500" size={20} />}
               bgColor="bg-teal-50"
@@ -778,35 +790,58 @@ export default function Dashboard() {
             <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
               <div className="mb-4">
                 <h3 className="text-sm font-bold text-slate-800 tracking-wider uppercase">🕹️ KONTROL ON/OFF KELAS PSIKOLOGI</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Nyalakan/matikan seluruh perangkat ruangan dengan cepat</p>
+                <p className="text-xs text-slate-500 mt-0.5">Nyalakan/matikan perangkat per tipe (Lampu, AC, Proyektor) di setiap ruangan</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {classes.filter(c => c !== 'All').map(loc => {
                   const locDevices = devices.filter(d => d.location === loc)
                   const isAnyActive = locDevices.some(d => d.status === 'active' || d.status === 'online')
                   
+                  const deviceTypeControls = [
+                    { type: 'lamp' as const, label: 'Lampu', icon: '💡', color: 'amber' },
+                    { type: 'ac' as const, label: 'AC', icon: '❄️', color: 'sky' },
+                    { type: 'projector' as const, label: 'Proyektor', icon: '📽️', color: 'violet' },
+                  ]
                   return (
-                    <div key={loc} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-purple-300 transition-all duration-300">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">{loc}</p>
-                        <span className={`inline-flex items-center w-2 h-2 rounded-full ${
-                          isAnyActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                        }`} />
+                    <div key={loc} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+                        <div>
+                          <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">{loc}</p>
+                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{locDevices.length} Perangkat Terdaftar</p>
+                        </div>
+                        <span className={`inline-flex items-center w-2.5 h-2.5 rounded-full ${isAnyActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                       </div>
-                      <p className="text-[10px] text-slate-400 font-semibold mb-4">{locDevices.length} Perangkat Terdaftar</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => handleClassroomControl(loc, 'on')}
-                          className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-all text-center"
-                        >
-                          ON
-                        </button>
-                        <button
-                          onClick={() => handleClassroomControl(loc, 'off')}
-                          className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-all text-center"
-                        >
-                          OFF
-                        </button>
+                      <div className="space-y-2">
+                        {deviceTypeControls.map(ctrl => {
+                          const onKey = `${loc}-${ctrl.type}-on`
+                          const offKey = `${loc}-${ctrl.type}-off`
+                          const isOnLoading = nodeRedLoading[onKey] || false
+                          const isOffLoading = nodeRedLoading[offKey] || false
+                          return (
+                            <div key={ctrl.type} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm">{ctrl.icon}</span>
+                                <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">{ctrl.label}</span>
+                              </div>
+                              <div className="flex items-center space-x-1.5">
+                                <button
+                                  onClick={() => handleNodeRedControl(loc, ctrl.type, 'on')}
+                                  disabled={isOnLoading}
+                                  className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-all text-center disabled:opacity-50"
+                                >
+                                  {isOnLoading ? '...' : 'ON'}
+                                </button>
+                                <button
+                                  onClick={() => handleNodeRedControl(loc, ctrl.type, 'off')}
+                                  disabled={isOffLoading}
+                                  className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-all text-center disabled:opacity-50"
+                                >
+                                  {isOffLoading ? '...' : 'OFF'}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )
@@ -837,7 +872,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                  {filteredDevices.map((device) => {
+                  {filteredDevices.filter(d => d.device_type !== 'SENSOR').map((device) => {
                     const online = isDeviceOnline(device)
                     const active = device.status === 'active' || device.status === 'online'
                     const livePower = active

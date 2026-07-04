@@ -25,6 +25,29 @@ const SETTINGS_KEY_MAP: Record<string, string> = {
   autoLogout: 'auto_logout',
 }
 
+const DEFAULT_SETTINGS = {
+  // General
+  timezone: 'Asia/Jakarta',
+  language: 'id',
+  theme: 'light',
+
+  // Notifications
+  emailNotifications: true,
+  smsNotifications: false,
+  pushNotifications: true,
+  alertSeverity: 'high',
+
+  // Thresholds
+  consumptionThreshold: 15,
+  temperatureThreshold: 70,
+  costThreshold: 50000,
+
+  // Security
+  twoFactor: false,
+  sessionTimeout: 30,
+  autoLogout: true,
+}
+
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -36,28 +59,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({ full_name: '', email: '', password: '', phone: '' })
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [now, setNow] = useState(new Date())
-  const [settings, setSettings] = useState({
-    // General
-    timezone: 'Asia/Jakarta',
-    language: 'id',
-    theme: 'light',
-    
-    // Notifications
-    emailNotifications: true,
-    smsNotifications: false,
-    pushNotifications: true,
-    alertSeverity: 'high',
-    
-    // Thresholds
-    consumptionThreshold: 15,
-    temperatureThreshold: 70,
-    costThreshold: 50000,
-    
-    // Security
-    twoFactor: false,
-    sessionTimeout: 30,
-    autoLogout: true,
-  })
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
 
   // Clock effect
   useEffect(() => {
@@ -84,15 +86,15 @@ export default function SettingsPage() {
         }
         
         // Merge API settings with defaults
-        const mergedSettings = { ...settings }
+        const mergedSettings = { ...DEFAULT_SETTINGS }
         if (userSettingsObj) {
           Object.keys(SETTINGS_KEY_MAP).forEach((uiKey) => {
             const dbKey = SETTINGS_KEY_MAP[uiKey]
             if (dbKey in userSettingsObj) {
               const val = userSettingsObj[dbKey]
-              if (typeof (settings as any)[uiKey] === 'boolean') {
+              if (typeof (DEFAULT_SETTINGS as any)[uiKey] === 'boolean') {
                 ;(mergedSettings as any)[uiKey] = (val === true || val === 1 || val === 'true')
-              } else if (typeof (settings as any)[uiKey] === 'number') {
+              } else if (typeof (DEFAULT_SETTINGS as any)[uiKey] === 'number') {
                 ;(mergedSettings as any)[uiKey] = Number(val)
               } else {
                 ;(mergedSettings as any)[uiKey] = val

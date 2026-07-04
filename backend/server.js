@@ -8,7 +8,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 // Import database connection
-const db = require('./config/database');
+require('./config/database');
 
 // Import routes
 const classRoutes = require('./routes/classRoutes');
@@ -39,10 +39,32 @@ if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
 }
 allowedOrigins = [...new Set(allowedOrigins.filter(Boolean))];
 
+function isDevelopmentLanOrigin(origin) {
+  if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV) {
+    return false;
+  }
+
+  try {
+    const url = new URL(origin);
+    const port = url.port || (url.protocol === 'https:' ? '443' : '80');
+    const isAllowedPort = ['3000', '3001', '3002', '3003'].includes(port);
+    const isPrivateHost =
+      url.hostname === 'localhost' ||
+      url.hostname === '127.0.0.1' ||
+      url.hostname.startsWith('10.') ||
+      url.hostname.startsWith('192.168.') ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(url.hostname);
+
+    return isAllowedPort && isPrivateHost;
+  } catch {
+    return false;
+  }
+}
+
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow non-browser tools (no Origin header) and configured frontends.
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || isDevelopmentLanOrigin(origin)) {
       return callback(null, true);
     }
     return callback(new Error(`CORS blocked for origin: ${origin}`));
@@ -92,7 +114,7 @@ app.use((req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
     success: false,

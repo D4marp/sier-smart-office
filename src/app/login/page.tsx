@@ -32,11 +32,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-stretch" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       
-      {/* Google Fonts Link */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-
       {/* Split Layout: Left side (Campus Wallpaper & Welcome Banner) */}
       <div className="hidden lg:flex lg:w-3/5 relative items-center justify-center text-white overflow-hidden" style={{
         backgroundImage: "url('/bg_unesa2.png')",

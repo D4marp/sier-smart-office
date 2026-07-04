@@ -28,8 +28,11 @@
     "mysql2": "^3.6.0"
   },
   "devDependencies": {
-    "jest": "^29.5.0",
+    "jest": "^30.4.2",
     "nodemon": "^3.0.1",
     "supertest": "^6.3.3"
+  },
+  "overrides": {
+    "js-yaml": "^4.2.0"
   }
 }
