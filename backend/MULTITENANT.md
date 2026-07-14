@@ -89,17 +89,45 @@ Script ini idempotent dan melakukan:
 node scripts/seed_unesa_faculties.js
 ```
 
-Mendaftarkan 12 fakultas UNESA lengkap dengan lokasi kampus (tersimpan di
+Mendaftarkan 14 tenant UNESA lengkap dengan lokasi kampus (tersimpan di
 `tenants.metadata` dan diekspos sebagai field `campus` di API):
 
-| Kampus | Fakultas (kode tenant) |
+| Kampus | Tenant (kode) |
 |---|---|
-| Kampus Lidah Wetan | FIP (`fip`), FBS (`fbs`), FIKK (`fikk`), Psikologi (`psikologi`), FK (`fk`) |
+| Kampus Lidah Wetan | FIP (`fip`), FBS (`fbs`), FIKK (`fikk`), Psikologi (`psikologi`), FK (`fk`), Pascasarjana Psikologi (`pascasarjana-psikologi`) |
 | Kampus Ketintang | FT (`ft`), FEB (`feb`), FMIPA (`fmipa`), FISIPOL (`fisipol`), FV (`fv`), FH (`fh`) |
 | Kampus 3 Moestopo | FKP (`fkp`) |
+| Kampus Magetan | Prodi Agribisnis Digital / Kampus Magetan (`magetan`) |
 
 Script idempotent: tenant existing hanya diperbarui nama & metadata-nya,
 database dan datanya tidak disentuh.
+
+**Pascasarjana Psikologi** sengaja dipisah dari Fakultas Psikologi
+(database & akun sendiri) meski secara fisik berada di kampus yang sama —
+mengikuti struktur administratif UNESA yang membedakan program pascasarjana
+dari fakultas sarjana.
+
+## Akun login per tenant
+
+```bash
+mysql -u root smart_energy_registry < database/seed_faculty_accounts.sql
+```
+
+Membuat akun `superadmin` (rektorat) dan satu akun `admin` per
+tenant/fakultas (lihat isi file untuk daftar lengkap email & password
+demo). Idempotent — `INSERT IGNORE` berdasarkan email, tidak menimpa akun
+yang sudah ada.
+
+## Data ruangan & perangkat — Pascasarjana Psikologi
+
+```bash
+mysql -u root smart_energy_pascasarjana_psikologi < database/seed_pascasarjana_psikologi.sql
+```
+
+Mengisi 3 ruang kelas (`Ruang Kelas 1/2/3 Lt. 2`) beserta perangkat
+AC + Lampu per ruang (status `offline`/`registered` — bukan data konsumsi
+fiktif, menunggu instalasi IoT fisik). Jalankan setelah
+`seed_unesa_faculties.js` (butuh database & schema tenant sudah ada).
 
 ## Migrasi schema ke semua fakultas
 
