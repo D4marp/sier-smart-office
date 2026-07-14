@@ -39,6 +39,7 @@ function requireRole(...allowedRoles) {
 }
 
 module.exports = {
+  extractToken,
   requireAuth,
   requireRole,
 };

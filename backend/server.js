@@ -7,8 +7,14 @@ const path = require('path');
 // Load backend environment variables from backend/.env when running from repository root
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
-// Import database connection
-require('./config/database');
+// Multi-tenant: registry rektorat + satu database per fakultas
+const tenantManager = require('./config/tenantManager');
+const { resolveTenant } = require('./middleware/tenantMiddleware');
+
+tenantManager.init().catch((err) => {
+  console.error('❌ Registry rektorat tidak dapat dihubungi:', err.message);
+  console.error('   Jalankan: node scripts/setup_multitenant.js');
+});
 
 // Import routes
 const classRoutes = require('./routes/classRoutes');
@@ -18,6 +24,7 @@ const alertRoutes = require('./routes/alertRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const tenantRoutes = require('./routes/tenantRoutes');
 
 const app = express();
 
@@ -88,13 +95,19 @@ app.use((req, res, next) => {
 
 // API Routes
 const apiPrefix = process.env.API_PREFIX || '/api/v1';
-app.use(`${apiPrefix}/classes`, classRoutes);
-app.use(`${apiPrefix}/devices`, deviceRoutes);
-app.use(`${apiPrefix}/consumption`, consumptionRoutes);
-app.use(`${apiPrefix}/alerts`, alertRoutes);
-app.use(`${apiPrefix}/settings`, settingsRoutes);
+
+// Route data per-fakultas: berjalan di dalam tenant context (resolveTenant
+// memilih database fakultas berdasarkan header X-Tenant / JWT / DEFAULT_TENANT)
+app.use(`${apiPrefix}/classes`, resolveTenant, classRoutes);
+app.use(`${apiPrefix}/devices`, resolveTenant, deviceRoutes);
+app.use(`${apiPrefix}/consumption`, resolveTenant, consumptionRoutes);
+app.use(`${apiPrefix}/alerts`, resolveTenant, alertRoutes);
+app.use(`${apiPrefix}/settings`, resolveTenant, settingsRoutes);
+
+// Route registry rektorat: users terpusat + manajemen tenant (tanpa tenant context)
 app.use(`${apiPrefix}/auth`, authRoutes);
 app.use(`${apiPrefix}/users`, userRoutes);
+app.use(`${apiPrefix}/tenants`, tenantRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

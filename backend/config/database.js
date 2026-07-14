@@ -1,41 +1,30 @@
-const mysql = require('mysql2/promise');
-require('dotenv').config();
+const { getTenantContext } = require('./tenantContext');
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'smart_energy_dashboard',
-  port: process.env.DB_PORT || 3030,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// Proxy database per-tenant.
+// Semua model memanggil `db.query(...)` / `db.getConnection()` seperti biasa;
+// koneksi yang dipakai adalah pool milik tenant (fakultas) yang sedang aktif
+// pada request ini, diisi oleh middleware resolveTenant.
+// Arsitektur multi-tenant: satu database per fakultas, registry di rektorat.
 
-// Test connection
-pool.getConnection()
-  .then(conn => {
-    console.log('✅ Database connected successfully');
-    conn.release();
-  })
-  .catch(err => {
-    console.error('❌ Database connection error:', err.message);
-  });
+function currentPool() {
+  const ctx = getTenantContext();
+  if (!ctx || !ctx.pool) {
+    throw new Error(
+      'Tidak ada tenant context. Route ini harus berjalan di belakang middleware resolveTenant, ' +
+      'atau script harus memakai tenantManager.getPoolByCode() secara eksplisit.'
+    );
+  }
+  return ctx.pool;
+}
 
-// Export pool with a query helper
-pool.query = function(sql, values) {
-  return pool.getConnection()
-    .then(connection => {
-      return connection.query(sql, values)
-        .then(results => {
-          connection.release();
-          return results;
-        })
-        .catch(err => {
-          connection.release();
-          throw err;
-        });
-    });
+module.exports = {
+  query(sql, values) {
+    return currentPool().query(sql, values);
+  },
+  execute(sql, values) {
+    return currentPool().execute(sql, values);
+  },
+  getConnection() {
+    return currentPool().getConnection();
+  },
 };
-
-module.exports = pool;

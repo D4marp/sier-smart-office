@@ -11,6 +11,26 @@ const API_BASE_URL = configuredApiBaseUrl || (
     : 'http://localhost:5001/api/v1'
 );
 
+// ============ MULTI-TENANT (satu database per fakultas) ============
+// Tenant aktif dikirim ke backend lewat header X-Tenant.
+// User fakultas otomatis terkunci pada tenant-nya; superadmin (rektorat)
+// bisa berpindah tenant lewat switcher.
+const TENANT_STORAGE_KEY = 'active_tenant';
+
+export function getActiveTenant(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(TENANT_STORAGE_KEY);
+}
+
+export function setActiveTenant(code: string | null) {
+  if (typeof window === 'undefined') return;
+  if (code) {
+    window.localStorage.setItem(TENANT_STORAGE_KEY, code);
+  } else {
+    window.localStorage.removeItem(TENANT_STORAGE_KEY);
+  }
+}
+
 // Error handler
 class APIError extends Error {
   constructor(
@@ -30,10 +50,13 @@ async function apiCall<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  const activeTenant = getActiveTenant();
+
   const response = await fetch(url, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(activeTenant ? { 'X-Tenant': activeTenant } : {}),
       ...options.headers,
     },
     ...options,
@@ -410,7 +433,40 @@ export const usersAPI = {
   },
 };
 
+// ============ TENANTS API (registry rektorat) ============
+export const tenantsAPI = {
+  getAll: async () => {
+    const response = await apiCall<{ success: boolean; data: any[] }>('/tenants');
+    return response.data;
+  },
+
+  create: async (data: { code: string; name: string; type?: string; db_name?: string }) => {
+    const response = await apiCall<{ success: boolean; data: any }>('/tenants', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  update: async (code: string, data: { name?: string; status?: string; type?: string }) => {
+    const response = await apiCall<{ success: boolean; data: any }>(`/tenants/${code}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  // Rollup lintas-fakultas untuk rektorat (superadmin)
+  overview: async (date?: string) => {
+    const query = date ? `?date=${date}` : '';
+    const response = await apiCall<{ success: boolean; data: any }>(`/tenants/overview${query}`);
+    return response.data;
+  },
+};
+
 // ============ NODE-RED DEVICE TYPE CONTROL API ============
+// Kontrol lampu/AC/proyektor lewat backend (bukan langsung ke Node-RED dari
+// browser), sehingga tetap terikat pada tenant aktif (header X-Tenant).
 async function nodeRedCall(
   classCode: string,
   deviceType: 'lamp' | 'ac' | 'projector',

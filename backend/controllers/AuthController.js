@@ -9,6 +9,7 @@ function buildToken(user) {
       email: user.email,
       role: user.role,
       full_name: user.full_name,
+      tenant: user.tenant_code || null,
     },
     process.env.JWT_SECRET || 'your_jwt_secret_key_change_this',
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
@@ -57,6 +58,8 @@ class AuthController {
             full_name: user.full_name,
             email: user.email,
             role: user.role,
+            tenant_code: user.tenant_code || null,
+            tenant_name: user.tenant_name || null,
           },
         },
       });
@@ -85,6 +88,8 @@ class AuthController {
           role: user.role,
           is_active: user.is_active,
           last_login: user.last_login,
+          tenant_code: user.tenant_code || null,
+          tenant_name: user.tenant_name || null,
         },
       });
     } catch (error) {
@@ -126,6 +131,8 @@ class AuthController {
           role: user.role,
           is_active: user.is_active,
           last_login: user.last_login,
+          tenant_code: user.tenant_code || null,
+          tenant_name: user.tenant_name || null,
         },
       });
     } catch (error) {

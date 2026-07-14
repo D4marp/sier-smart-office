@@ -1,13 +1,23 @@
-const db = require('../config/database');
+const registryPool = require('../config/registryPool');
 const bcrypt = require('bcryptjs');
+
+// Users terpusat di database registry (rektorat), bukan di database fakultas.
+// tenant_id NULL + role superadmin = akun rektorat dengan akses lintas fakultas.
+
+const SELECT_FIELDS = `
+  u.id, u.full_name, u.email, u.role, u.is_active, u.last_login,
+  u.created_at, u.updated_at, u.tenant_id,
+  t.code AS tenant_code, t.name AS tenant_name
+`;
 
 class User {
   static async findAll() {
     try {
-      const [rows] = await db.query(
-        `SELECT id, full_name, email, role, is_active, last_login, created_at, updated_at
-         FROM users
-         ORDER BY created_at DESC`
+      const [rows] = await registryPool.query(
+        `SELECT ${SELECT_FIELDS}
+         FROM users u
+         LEFT JOIN tenants t ON t.id = u.tenant_id
+         ORDER BY u.created_at DESC`
       );
       return rows;
     } catch (error) {
@@ -17,10 +27,11 @@ class User {
 
   static async findById(id) {
     try {
-      const [rows] = await db.query(
-        `SELECT id, full_name, email, role, is_active, last_login, created_at, updated_at, password
-         FROM users
-         WHERE id = ?`,
+      const [rows] = await registryPool.query(
+        `SELECT ${SELECT_FIELDS}, u.password
+         FROM users u
+         LEFT JOIN tenants t ON t.id = u.tenant_id
+         WHERE u.id = ?`,
         [id]
       );
       return rows[0] || null;
@@ -31,10 +42,11 @@ class User {
 
   static async findByEmail(email) {
     try {
-      const [rows] = await db.query(
-        `SELECT id, full_name, email, role, is_active, last_login, created_at, updated_at, password
-         FROM users
-         WHERE email = ?`,
+      const [rows] = await registryPool.query(
+        `SELECT ${SELECT_FIELDS}, u.password
+         FROM users u
+         LEFT JOIN tenants t ON t.id = u.tenant_id
+         WHERE u.email = ?`,
         [email]
       );
       return rows[0] || null;
@@ -43,14 +55,29 @@ class User {
     }
   }
 
+  static async resolveTenantId(tenantCode) {
+    if (tenantCode === undefined || tenantCode === null || tenantCode === '') {
+      return null;
+    }
+    const [rows] = await registryPool.query(
+      'SELECT id FROM tenants WHERE code = ?',
+      [String(tenantCode).trim().toLowerCase()]
+    );
+    if (!rows.length) {
+      throw new Error(`Tenant '${tenantCode}' tidak ditemukan`);
+    }
+    return rows[0].id;
+  }
+
   static async create(data) {
     try {
-      const { full_name, email, password, role = 'viewer', is_active = true } = data;
+      const { full_name, email, password, role = 'viewer', is_active = true, tenant_code } = data;
       const hashedPassword = await bcrypt.hash(password, 10);
-      const [result] = await db.query(
-        `INSERT INTO users (full_name, email, password, role, is_active)
-         VALUES (?, ?, ?, ?, ?)`,
-        [full_name, email, hashedPassword, role, is_active ? 1 : 0]
+      const tenantId = role === 'superadmin' ? null : await User.resolveTenantId(tenant_code);
+      const [result] = await registryPool.query(
+        `INSERT INTO users (full_name, email, password, role, is_active, tenant_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [full_name, email, hashedPassword, role, is_active ? 1 : 0, tenantId]
       );
       return result;
     } catch (error) {
@@ -60,7 +87,7 @@ class User {
 
   static async update(id, data) {
     try {
-      const { full_name, email, password, role, is_active } = data;
+      const { full_name, email, password, role, is_active, tenant_code } = data;
       const fields = [];
       const values = [];
 
@@ -85,13 +112,18 @@ class User {
         fields.push('is_active = ?');
         values.push(is_active ? 1 : 0);
       }
+      if (tenant_code !== undefined) {
+        const tenantId = await User.resolveTenantId(tenant_code);
+        fields.push('tenant_id = ?');
+        values.push(tenantId);
+      }
 
       if (!fields.length) {
         return { affectedRows: 0 };
       }
 
       values.push(id);
-      const [result] = await db.query(
+      const [result] = await registryPool.query(
         `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
         values
       );
@@ -103,7 +135,7 @@ class User {
 
   static async delete(id) {
     try {
-      const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+      const [result] = await registryPool.query('DELETE FROM users WHERE id = ?', [id]);
       return result;
     } catch (error) {
       throw new Error(`Database error: ${error.message}`);
@@ -112,7 +144,7 @@ class User {
 
   static async recordLogin(id) {
     try {
-      await db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [id]);
+      await registryPool.query('UPDATE users SET last_login = NOW() WHERE id = ?', [id]);
     } catch (error) {
       throw new Error(`Database error: ${error.message}`);
     }

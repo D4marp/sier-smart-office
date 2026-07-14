@@ -5,7 +5,7 @@ const { requireAuth, requireRole } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.use(requireAuth);
-router.use(requireRole('admin'));
+router.use(requireRole('admin', 'superadmin'));
 
 router.get('/', UserController.getAll);
 router.post('/', UserController.create);
