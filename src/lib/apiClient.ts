@@ -410,46 +410,36 @@ export const usersAPI = {
   },
 };
 
-// ============ NODE-RED DIRECT CONTROL API (Port 3001) ============
-// Separate API for controlling devices via Node-RED on port 3001
-const NODERED_BASE_URL = typeof window !== 'undefined'
-  ? `${window.location.protocol}//${window.location.hostname}:3001`
-  : 'http://127.0.0.1:3001';
-
-async function nodeRedCall(endpoint: string, state: 'on' | 'off'): Promise<any> {
-  const url = `${NODERED_BASE_URL}${endpoint}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ state }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Node-RED control failed: ${response.status} ${text}`);
-  }
-
-  try {
-    return await response.json();
-  } catch {
-    return { success: true };
-  }
+// ============ NODE-RED DEVICE TYPE CONTROL API ============
+async function nodeRedCall(
+  classCode: string,
+  deviceType: 'lamp' | 'ac' | 'projector',
+  state: 'on' | 'off'
+): Promise<any> {
+  const response = await apiCall<{ success: boolean; data: any }>(
+    `/devices/class-code/${encodeURIComponent(classCode)}/control/${deviceType}`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ state }),
+    }
+  );
+  return response.data;
 }
 
 export const nodeRedControlAPI = {
   // Lampu (WS501/WS502 compatibility)
   controlLamp: async (classCode: string, state: 'on' | 'off') => {
-    return nodeRedCall(`/api/${encodeURIComponent(classCode)}`, state);
+    return nodeRedCall(classCode, 'lamp', state);
   },
 
   // Proyektor
   controlProjector: async (classCode: string, state: 'on' | 'off') => {
-    return nodeRedCall(`/api/projector/${encodeURIComponent(classCode)}`, state);
+    return nodeRedCall(classCode, 'projector', state);
   },
 
   // AC
   controlAC: async (classCode: string, state: 'on' | 'off') => {
-    return nodeRedCall(`/api/ac/${encodeURIComponent(classCode)}`, state);
+    return nodeRedCall(classCode, 'ac', state);
   },
 };
 

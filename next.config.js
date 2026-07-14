@@ -11,6 +11,18 @@ const nextConfig = {
         source: '/api/v1/:path*',
         destination: `${backendUrl}/api/v1/:path*`,
       },
+      {
+        source: '/api/ac/:classCode',
+        destination: `${backendUrl}/api/v1/devices/class-code/:classCode/control/ac`,
+      },
+      {
+        source: '/api/projector/:classCode',
+        destination: `${backendUrl}/api/v1/devices/class-code/:classCode/control/projector`,
+      },
+      {
+        source: '/api/:classCode',
+        destination: `${backendUrl}/api/v1/devices/class-code/:classCode/control/lamp`,
+      },
     ]
   },
 }

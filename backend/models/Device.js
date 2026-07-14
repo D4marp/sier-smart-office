@@ -32,13 +32,17 @@ class Device {
 
   static async getByClassCode(classCode) {
     try {
+      const normalizedClassCode = String(classCode || '').toLowerCase().replace(/\./g, '');
       const [rows] = await db.query(`
         SELECT d.*, c.name as class_name 
         FROM devices d 
         LEFT JOIN classes c ON d.class_id = c.id 
-        WHERE c.name = ? OR d.location = ?
+        WHERE c.name = ?
+          OR d.location = ?
+          OR LOWER(REPLACE(c.name, '.', '')) = ?
+          OR LOWER(REPLACE(d.location, '.', '')) = ?
         ORDER BY d.device_name
-      `, [classCode, classCode]);
+      `, [classCode, classCode, normalizedClassCode, normalizedClassCode]);
       return rows;
     } catch (error) {
       throw new Error(`Database error: ${error.message}`);

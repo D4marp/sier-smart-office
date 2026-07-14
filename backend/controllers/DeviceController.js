@@ -114,6 +114,22 @@ async function sendTcpCommand(host, port, payload) {
   throw lastError;
 }
 
+function normalizeClassKey(classCode) {
+  return String(classCode || '').toLowerCase().replace(/\./g, '');
+}
+
+function normalizeTargetType(deviceType) {
+  const raw = String(deviceType || '').toLowerCase();
+  if (raw.includes('ac')) return 'ac';
+  if (raw.includes('projector') || raw.includes('proyektor')) return 'projector';
+  if (raw.includes('lamp') || raw.includes('light') || raw.includes('cahaya')) return 'lamp';
+  return raw;
+}
+
+function deviceMatchesTargetType(device, targetType) {
+  return normalizeTargetType(device.device_type || device.type) === targetType;
+}
+
 class DeviceController {
   // Maps classCode e.g. "Q1.01.02" → "http://10.12.1.150:1880/api/q10102"
   static getNodeRedClassEndpointUrl(classCode) {
@@ -675,6 +691,84 @@ class DeviceController {
       return res.status(500).json({
         success: false,
         message,
+      });
+    }
+  }
+
+  static async controlClassDeviceTypeViaNodeRed(req, res) {
+    try {
+      const { classCode, deviceType } = req.params;
+      const { action, state } = req.body;
+      const finalAction = action || state;
+
+      if (!classCode) {
+        return res.status(400).json({
+          success: false,
+          message: 'classCode is required'
+        });
+      }
+
+      if (!finalAction || !['on', 'off'].includes(String(finalAction).toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid action. Must be on or off'
+        });
+      }
+
+      const targetType = normalizeTargetType(deviceType);
+      const target = TARGETS[targetType];
+      if (!target) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid deviceType. Must be lamp, ac, or projector'
+        });
+      }
+
+      const classKey = normalizeClassKey(classCode);
+      const tcpPort = target.ports[classKey];
+      if (!tcpPort) {
+        return res.status(404).json({
+          success: false,
+          message: `No ${target.label} TCP target configured for class ${classCode}`
+        });
+      }
+
+      const normalizedAction = String(finalAction).toLowerCase();
+      const tcpPayload = {
+        state: normalizedAction,
+        device: targetType,
+        classKey,
+        source: "web_api"
+      };
+
+      const tcpResult = await sendTcpCommand(target.host, tcpPort, tcpPayload);
+      const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
+      const devices = await Device.getByClassCode(classCode);
+      const matchedDevices = devices.filter(device => deviceMatchesTargetType(device, targetType));
+
+      await Promise.all(matchedDevices.map(device => Device.updateStatus(device.id, nextStatus)));
+
+      return res.json({
+        success: true,
+        message: `${target.label} ${classCode} command ${normalizedAction.toUpperCase()} sent successfully via TCP`,
+        data: {
+          classCode,
+          classKey,
+          deviceType: targetType,
+          action: normalizedAction,
+          status: nextStatus,
+          affectedDevices: matchedDevices.length,
+          tcp: {
+            host: target.host,
+            port: tcpPort,
+            tcpAttempt: tcpResult.attempt
+          }
+        }
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
       });
     }
   }

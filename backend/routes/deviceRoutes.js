@@ -33,6 +33,9 @@ router.post('/:id/control', DeviceController.controlViaNodeRed);
 // Send ON/OFF control command for all devices in a class via Node-RED
 router.post('/class-code/:classCode/control', DeviceController.controlClassViaNodeRed);
 
+// Send ON/OFF control command for a specific device type in a class via Node-RED
+router.post('/class-code/:classCode/control/:deviceType', DeviceController.controlClassDeviceTypeViaNodeRed);
+
 // Update device reading (power & temperature)
 router.patch('/:id/reading', DeviceController.updateReading);
 
