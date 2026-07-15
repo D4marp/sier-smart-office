@@ -1,18 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import Image from 'next/image'
 import { ShieldCheck, Zap, Activity } from 'lucide-react'
+import { getDashboardPathForTenant, getDefaultLoginForHost } from '@/lib/tenantDefaults'
 
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
-  const [email, setEmail] = useState('admin@unesa.ac.id')
-  const [password, setPassword] = useState('admin123')
+  const [defaultLogin, setDefaultLogin] = useState<ReturnType<typeof getDefaultLoginForHost>>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loginForHost = getDefaultLoginForHost()
+    setDefaultLogin(loginForHost)
+    if (loginForHost) {
+      setEmail(loginForHost.email)
+      setPassword(loginForHost.password)
+    }
+  }, [])
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -20,8 +31,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      await login(email, password)
-      router.replace('/')
+      const user = await login(email, password)
+      router.replace(getDashboardPathForTenant(user.tenant_code))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kombinasi email atau password salah.')
     } finally {
@@ -104,7 +115,7 @@ export default function LoginPage() {
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">Masuk Sistem</h2>
               <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">
-                Silakan masukkan email dan password administrator untuk mengakses dashboard kendali eksekutif Rektorat.
+                Silakan masukkan email dan password administrator untuk mengakses dashboard energi fakultas.
               </p>
             </div>
           </div>
@@ -112,18 +123,24 @@ export default function LoginPage() {
           {/* Demo Login Notice Alert Box (Professional University Info Box style) */}
           <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 text-xs space-y-2 text-blue-900">
             <p className="font-bold uppercase tracking-wider text-blue-800 flex items-center space-x-1.5">
-              <span>📌 Informasi Kredensial Uji Coba</span>
+              <span>Informasi Kredensial Uji Coba</span>
             </p>
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-blue-100/50">
-              <div>
-                <p className="text-slate-500 font-semibold">Email Pengguna:</p>
-                <p className="font-mono font-bold text-slate-800">admin@unesa.ac.id</p>
+            {defaultLogin ? (
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-blue-100/50">
+                <div>
+                  <p className="text-slate-500 font-semibold">Email Pengguna:</p>
+                  <p className="font-mono font-bold text-slate-800">{defaultLogin.email}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 font-semibold">Kata Sandi:</p>
+                  <p className="font-mono font-bold text-slate-800">{defaultLogin.password}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-slate-500 font-semibold">Kata Sandi:</p>
-                <p className="font-mono font-bold text-slate-800">admin123</p>
-              </div>
-            </div>
+            ) : (
+              <p className="pt-1 border-t border-blue-100/50 text-slate-600">
+                Gunakan akun admin fakultas sesuai tenant masing-masing.
+              </p>
+            )}
           </div>
 
           {/* Login Form */}

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { tenantsAPI } from '@/lib/apiClient'
+import { getDashboardPathForTenant } from '@/lib/tenantDefaults'
 import { useAuth } from '@/components/AuthProvider'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
@@ -55,7 +56,7 @@ export default function RektoratDashboard() {
   useEffect(() => {
     if (authLoading) return
     if (user && !isSuperadmin) {
-      router.replace(`/fakultas/${user.tenant_code}`)
+      router.replace(getDashboardPathForTenant(user.tenant_code))
     }
   }, [authLoading, user, isSuperadmin, router])
 
@@ -75,6 +76,7 @@ export default function RektoratDashboard() {
       }
     }
     load()
+    return () => { cancelled = true }
   }, [isSuperadmin])
 
   const campuses = useMemo(() => {

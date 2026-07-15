@@ -3,6 +3,8 @@
  * Handles all backend API requests
  */
 
+import { getDefaultTenantForHost } from './tenantDefaults';
+
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
 const API_BASE_URL = configuredApiBaseUrl || (
@@ -19,7 +21,7 @@ const TENANT_STORAGE_KEY = 'active_tenant';
 
 export function getActiveTenant(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(TENANT_STORAGE_KEY);
+  return window.localStorage.getItem(TENANT_STORAGE_KEY) || getDefaultTenantForHost();
 }
 
 export function setActiveTenant(code: string | null) {

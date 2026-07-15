@@ -7,6 +7,9 @@ import Image from 'next/image'
 import { Menu, Building2, Activity, Settings, LogOut } from 'lucide-react'
 import { useAuth } from './AuthProvider'
 import { tenantsAPI } from '@/lib/apiClient'
+import { getDashboardPathForTenant } from '@/lib/tenantDefaults'
+
+const TENANT_WORKSPACE_PATHS = ['/devices', '/analytics', '/alerts', '/users']
 
 type TenantSummary = {
   code: string
@@ -23,9 +26,9 @@ interface SidebarProps {
 // semua fakultas aktif, user fakultas hanya melihat fakultasnya sendiri.
 export default function Sidebar({ open, onToggle }: SidebarProps) {
   const pathname = usePathname()
-  const { user, logout, switchTenant } = useAuth()
+  const { user, activeTenant, logout, switchTenant } = useAuth()
   const [tenants, setTenants] = useState<TenantSummary[]>([])
-  const isSuperadmin = user?.role === 'superadmin'
+  const isSuperadmin = user?.role === 'superadmin' && !user?.tenant_code
 
   useEffect(() => {
     if (isSuperadmin) {
@@ -35,8 +38,17 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
     }
   }, [isSuperadmin, user?.tenant_code, user?.tenant_name])
 
-  const facultyHref = (code: string) => `/fakultas/${code}`
-  const isFacultyActive = (code: string) => pathname === facultyHref(code)
+  const facultyHref = (code: string) => getDashboardPathForTenant(code)
+  const isWorkspacePath = TENANT_WORKSPACE_PATHS.includes(pathname)
+  const activeTenantCode = isSuperadmin ? activeTenant : user?.tenant_code
+  const isFacultyActive = (code: string) =>
+    pathname === facultyHref(code) ||
+    (isWorkspacePath && activeTenantCode === code)
+
+  const sectionLinkClass = (href: string) =>
+    `block py-1.5 px-3 text-xs rounded transition-all ${
+      pathname === href ? 'font-semibold text-white bg-white/10' : 'text-white/60 hover:text-white hover:bg-white/5'
+    }`
 
   return (
     <aside
@@ -92,19 +104,23 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
 
               {open && active && (
                 <div className="pl-8 space-y-1 border-l border-white/10 ml-6">
-                  <Link href={facultyHref(t.code)} className="block py-1.5 px-3 text-xs font-semibold text-white rounded bg-white/10">
+                  <Link
+                    href={facultyHref(t.code)}
+                    onClick={() => switchTenant(t.code)}
+                    className={sectionLinkClass(facultyHref(t.code))}
+                  >
                     Dasbor
                   </Link>
-                  <Link href="/devices" className="block py-1.5 px-3 text-xs text-white/60 hover:text-white rounded hover:bg-white/5">
+                  <Link href="/devices" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/devices')}>
                     Perangkat
                   </Link>
-                  <Link href="/analytics" className="block py-1.5 px-3 text-xs text-white/60 hover:text-white rounded hover:bg-white/5">
+                  <Link href="/analytics" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/analytics')}>
                     Analitik
                   </Link>
-                  <Link href="/alerts" className="block py-1.5 px-3 text-xs text-white/60 hover:text-white rounded hover:bg-white/5">
+                  <Link href="/alerts" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/alerts')}>
                     Pemberitahuan
                   </Link>
-                  <Link href="/users" className="block py-1.5 px-3 text-xs text-white/60 hover:text-white rounded hover:bg-white/5">
+                  <Link href="/users" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/users')}>
                     Pengguna
                   </Link>
                 </div>

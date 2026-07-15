@@ -2,7 +2,7 @@
 
 import { Activity } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { devicesAPI } from '@/lib/apiClient'
+import { devicesAPI, nodeRedControlAPI } from '@/lib/apiClient'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
 
@@ -19,10 +19,38 @@ interface Device {
   status?: string
 }
 
+type DeviceTypeControl = {
+  type: 'lamp' | 'ac' | 'projector'
+  label: string
+}
+
+const DEVICE_TYPE_CONTROLS: DeviceTypeControl[] = [
+  { type: 'lamp', label: 'Lampu' },
+  { type: 'ac', label: 'AC' },
+  { type: 'projector', label: 'Proyektor' },
+]
+
 function isDeviceOnline(device: Device): boolean {
   const iot = String(device.iot_status || '').toLowerCase()
   const status = String(device.status || '').toLowerCase()
   return iot === 'online' || iot === 'active' || status === 'active' || status === 'idle'
+}
+
+function deviceMatchesControlType(device: Device, controlType: DeviceTypeControl['type']) {
+  const type = String(device.device_type || '').toLowerCase()
+  if (controlType === 'lamp') return type.includes('lamp') || type.includes('light')
+  if (controlType === 'ac') return type.includes('ac')
+  return type.includes('projector') || type.includes('proyektor')
+}
+
+function isDeviceActive(device: Device): boolean {
+  const iot = String(device.iot_status || '').toLowerCase()
+  const status = String(device.status || '').toLowerCase()
+  return iot === 'online' || iot === 'active' || status === 'online' || status === 'active'
+}
+
+function isDeviceControllable(device: Device): boolean {
+  return DEVICE_TYPE_CONTROLS.some((control) => deviceMatchesControlType(device, control.type))
 }
 
 export default function DevicesPage() {
@@ -33,6 +61,8 @@ export default function DevicesPage() {
   const [error, setError] = useState<string | null>(null)
   const [classes, setClasses] = useState(['All'])
   const [classControlLoading, setClassControlLoading] = useState<Record<string, 'on' | 'off' | null>>({})
+  const [typeControlLoading, setTypeControlLoading] = useState<Record<string, boolean>>({})
+  const [deviceControlLoading, setDeviceControlLoading] = useState<Record<number, 'on' | 'off' | null>>({})
 
   // Load devices from backend API
   useEffect(() => {
@@ -66,6 +96,13 @@ export default function DevicesPage() {
     : devices.filter(d => d.location === selectedClass)
 
   const visibleClassCodes = Array.from(new Set(filteredDevices.map((d) => d.location).filter(Boolean)))
+  const getClassDevices = (classCode: string) => devices.filter((device) => device.location === classCode)
+  const getControlsForClass = (classCode: string) => {
+    const classDevices = getClassDevices(classCode)
+    return DEVICE_TYPE_CONTROLS.filter((control) =>
+      classDevices.some((device) => deviceMatchesControlType(device, control.type))
+    )
+  }
 
   const handleClassControl = async (classCode: string, action: 'on' | 'off') => {
     try {
@@ -95,6 +132,7 @@ export default function DevicesPage() {
 
   const handleDeviceControl = async (deviceId: number, action: 'on' | 'off') => {
     try {
+      setDeviceControlLoading(prev => ({ ...prev, [deviceId]: action }))
       await devicesAPI.control(deviceId, action)
       setDevices(prev => prev.map(device => {
         if (device.id !== deviceId) {
@@ -111,7 +149,152 @@ export default function DevicesPage() {
     } catch (err) {
       console.error('Error controlling device:', err)
       setError(err instanceof Error ? err.message : 'Gagal mengirim perintah ON/OFF perangkat')
+    } finally {
+      setDeviceControlLoading(prev => ({ ...prev, [deviceId]: null }))
     }
+  }
+
+  const handleDeviceTypeControl = async (
+    classCode: string,
+    deviceType: DeviceTypeControl['type'],
+    action: 'on' | 'off'
+  ) => {
+    const key = `${classCode}-${deviceType}-${action}`
+
+    try {
+      setTypeControlLoading(prev => ({ ...prev, [key]: true }))
+
+      if (deviceType === 'lamp') {
+        await nodeRedControlAPI.controlLamp(classCode, action)
+      } else if (deviceType === 'ac') {
+        await nodeRedControlAPI.controlAC(classCode, action)
+      } else {
+        await nodeRedControlAPI.controlProjector(classCode, action)
+      }
+
+      setDevices(prev => prev.map(device => {
+        if (device.location !== classCode || !deviceMatchesControlType(device, deviceType)) {
+          return device
+        }
+
+        return {
+          ...device,
+          status: action === 'on' ? 'active' : 'idle',
+          iot_status: action === 'on' ? 'active' : 'inactive',
+        }
+      }))
+      setError(null)
+    } catch (err) {
+      console.error(`Error controlling ${deviceType} devices in ${classCode}:`, err)
+      setError(err instanceof Error ? err.message : `Gagal mengirim perintah ${deviceType.toUpperCase()} ${action.toUpperCase()} ke Node-RED`)
+    } finally {
+      setTypeControlLoading(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
+  const renderTypeControls = (classCode: string) => {
+    const controls = getControlsForClass(classCode)
+
+    if (controls.length === 0) {
+      return (
+        <p className="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-400">
+          Belum ada perangkat Lampu/AC/Proyektor di ruangan ini.
+        </p>
+      )
+    }
+
+    return (
+      <div className="space-y-2">
+        {controls.map((control) => {
+          const onKey = `${classCode}-${control.type}-on`
+          const offKey = `${classCode}-${control.type}-off`
+          const isOnLoading = Boolean(typeControlLoading[onKey])
+          const isOffLoading = Boolean(typeControlLoading[offKey])
+
+          return (
+            <div key={control.type} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700">{control.label}</span>
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => handleDeviceTypeControl(classCode, control.type, 'on')}
+                  disabled={isOnLoading || isOffLoading}
+                  className="px-2.5 py-1 rounded-md border border-emerald-200 bg-emerald-50 text-[10px] font-bold uppercase tracking-wider text-emerald-700 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isOnLoading ? '...' : 'ON'}
+                </button>
+                <button
+                  onClick={() => handleDeviceTypeControl(classCode, control.type, 'off')}
+                  disabled={isOnLoading || isOffLoading}
+                  className="px-2.5 py-1 rounded-md border border-rose-200 bg-rose-50 text-[10px] font-bold uppercase tracking-wider text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isOffLoading ? '...' : 'OFF'}
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderDeviceControlButtons = (device: Device) => {
+    const loadingAction = deviceControlLoading[device.id]
+    const active = isDeviceActive(device)
+
+    return (
+      <div className="flex space-x-1.5">
+        <button
+          onClick={() => handleDeviceControl(device.id, 'on')}
+          disabled={Boolean(loadingAction) || active}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 duration-200 ${
+            active
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+              : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60'
+          }`}
+        >
+          {loadingAction === 'on' ? '...' : 'ON'}
+        </button>
+        <button
+          onClick={() => handleDeviceControl(device.id, 'off')}
+          disabled={Boolean(loadingAction) || !active}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 duration-200 ${
+            !active
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+              : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60'
+          }`}
+        >
+          {loadingAction === 'off' ? '...' : 'OFF'}
+        </button>
+      </div>
+    )
+  }
+
+  const renderDeviceControls = (classCode: string) => {
+    const controllableDevices = getClassDevices(classCode).filter(isDeviceControllable)
+
+    if (controllableDevices.length === 0) {
+      return (
+        <p className="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-400">
+          Belum ada perangkat yang bisa dikontrol satuan di ruangan ini.
+        </p>
+      )
+    }
+
+    return (
+      <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
+        {controllableDevices.map((device) => (
+          <div key={device.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-white px-3 py-2">
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-700">{device.device_name}</p>
+              <p className="mt-0.5 text-[9px] font-mono text-slate-400">
+                #{device.id} - {device.device_type} - {isDeviceActive(device) ? 'Active' : 'Idle'}
+              </p>
+            </div>
+            {renderDeviceControlButtons(device)}
+          </div>
+        ))}
+      </div>
+    )
   }
 
   if (loading) {
@@ -178,12 +361,15 @@ export default function DevicesPage() {
           {/* Room Controls (Only visible when "All" is selected) */}
           {selectedClass === 'All' && visibleClassCodes.length > 0 && (
             <div className="mb-6 rounded-xl bg-white p-6 shadow-md border border-slate-200">
-              <h3 className="mb-4 text-sm font-bold text-slate-800 uppercase tracking-wider">Kontrol Saklar ON/OFF Per Ruangan</h3>
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Kontrol Saklar ON/OFF Per Ruangan</h3>
+                <p className="mt-1 text-xs text-slate-500">Kontrol semua perangkat ruangan atau pilih per tipe perangkat.</p>
+              </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {visibleClassCodes.map((classCode) => (
                   <div key={classCode} className="rounded-xl border border-slate-200 p-4 bg-slate-50/50 hover:border-slate-300 transition-all">
                     <p className="text-sm font-bold text-slate-900">{classCode}</p>
-                    <p className="mt-1 text-xs text-slate-400">Saklar cepat untuk seluruh AC & Lampu di ruangan ini.</p>
+                    <p className="mt-1 text-xs text-slate-400">{getClassDevices(classCode).length} perangkat terdaftar</p>
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <button
                         onClick={() => handleClassControl(classCode, 'on')}
@@ -199,6 +385,14 @@ export default function DevicesPage() {
                       >
                         {classControlLoading[classCode] === 'off' ? 'Mengirim...' : 'OFF'}
                       </button>
+                    </div>
+                    <div className="mt-4 border-t border-slate-200 pt-3">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Kontrol per tipe</p>
+                      {renderTypeControls(classCode)}
+                    </div>
+                    <div className="mt-4 border-t border-slate-200 pt-3">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Kontrol per device</p>
+                      {renderDeviceControls(classCode)}
                     </div>
                   </div>
                 ))}
@@ -245,6 +439,13 @@ export default function DevicesPage() {
                     </button>
                   </div>
                 </div>
+                <div className="mb-1 rounded-xl bg-white p-4 shadow-md border border-slate-200">
+                  <div className="mb-3">
+                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Kontrol Per Tipe Ruang {selectedClass}</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Kontrol Lampu, AC, atau Proyektor tanpa memengaruhi tipe perangkat lain.</p>
+                  </div>
+                  {renderTypeControls(selectedClass)}
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredDevices.map((device) => (
@@ -284,36 +485,13 @@ export default function DevicesPage() {
                         </div>
                       </div>
 
-                      {['ac', 'projector', 'lamp', 'lighting'].includes(String(device.device_type).toLowerCase()) && (
+                      {isDeviceControllable(device) && (
                         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
                           <div className="flex items-center space-x-1">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kendali Perangkat:</span>
                             <span className="text-[9px] text-slate-400 font-mono">#{device.id}</span>
                           </div>
-                          <div className="flex space-x-1.5">
-                            <button
-                              onClick={() => handleDeviceControl(device.id, 'on')}
-                              disabled={device.status === 'active' || device.status === 'online'}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 duration-200 ${
-                                (device.status === 'active' || device.status === 'online')
-                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                                  : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md'
-                              }`}
-                            >
-                              ON
-                            </button>
-                            <button
-                              onClick={() => handleDeviceControl(device.id, 'off')}
-                              disabled={!(device.status === 'active' || device.status === 'online')}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 duration-200 ${
-                                !(device.status === 'active' || device.status === 'online')
-                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                                  : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-md'
-                              }`}
-                            >
-                              OFF
-                            </button>
-                          </div>
+                          {renderDeviceControlButtons(device)}
                         </div>
                       )}
                     </div>

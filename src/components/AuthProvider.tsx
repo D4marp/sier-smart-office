@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { authAPI, getActiveTenant, setActiveTenant } from '@/lib/apiClient'
 
 type AuthUser = {
@@ -86,14 +86,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Tidak reload — setiap halaman men-fetch datanya sendiri saat mount,
   // jadi cukup set tenant aktif sebelum navigasi terjadi.
   const switchTenant = (code: string) => {
-    setActiveTenant(code)
-    setActiveTenantState(code)
+    const nextCode = user?.role !== 'superadmin' && user?.tenant_code
+      ? user.tenant_code
+      : code
+    setActiveTenant(nextCode)
+    setActiveTenantState(nextCode)
   }
 
-  const value = useMemo(
-    () => ({ user, loading, activeTenant, refreshUser, login, logout, switchTenant }),
-    [user, loading, activeTenant]
-  )
+  const value = { user, loading, activeTenant, refreshUser, login, logout, switchTenant }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

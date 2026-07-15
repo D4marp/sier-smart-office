@@ -6,8 +6,7 @@ const router = express.Router();
 
 router.use(requireAuth);
 
-// Daftar tenant: semua user login boleh melihat (untuk switcher superadmin
-// respons menyertakan detail tambahan).
+// Daftar tenant: superadmin melihat semua tenant; user fakultas hanya melihat tenant miliknya.
 router.get('/', TenantController.getAll);
 
 // Rollup lintas-fakultas untuk rektorat

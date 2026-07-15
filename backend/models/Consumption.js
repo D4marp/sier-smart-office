@@ -1,6 +1,13 @@
 const db = require('../config/database');
 
 class Consumption {
+  static formatLocalDate(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   static normalizeNumber(value) {
     if (value === undefined || value === null || value === '') {
       return null;
@@ -54,7 +61,7 @@ class Consumption {
 
   static normalizeRow(data = {}) {
     const now = new Date();
-    const fallbackDate = now.toISOString().split('T')[0];
+    const fallbackDate = Consumption.formatLocalDate(now);
     const fallbackStart = now.toTimeString().slice(0, 8);
     const fallbackEnd = new Date(now.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 8);
 
@@ -100,7 +107,22 @@ class Consumption {
     try {
       const [rows] = await db.query(`
         SELECT
-          dc.*,
+          dc.id,
+          dc.device_id,
+          dc.id_class,
+          dc.occupancy,
+          dc.power_ac,
+          dc.power_lamp,
+          dc.consumption,
+          DATE_FORMAT(dc.consumption_date, '%Y-%m-%d') as consumption_date,
+          TIME_FORMAT(dc.hour_start, '%H:%i:%s') as hour_start,
+          TIME_FORMAT(dc.hour_end, '%H:%i:%s') as hour_end,
+          dc.temperature,
+          dc.humidity,
+          dc.payload,
+          dc.message_id,
+          dc.notes,
+          dc.created_at,
           d.id as device_id,
           d.device_name as device_name,
           d.device_type as device_type,
@@ -140,11 +162,11 @@ class Consumption {
   static async getMonthly(deviceId, year, month) {
     try {
       const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      const endDate = Consumption.formatLocalDate(new Date(Number(year), Number(month), 0));
 
       const [rows] = await db.query(`
         SELECT 
-          DATE(consumption_date) as date,
+          DATE_FORMAT(consumption_date, '%Y-%m-%d') as date,
           SUM(consumption) as total_consumption,
           AVG(temperature) as avg_temperature,
           MAX(consumption) as peak_consumption

@@ -26,8 +26,17 @@ class TenantController {
   // GET /tenants — daftar tenant untuk switcher & manajemen
   static async getAll(req, res) {
     try {
-      const tenants = await tenantManager.listTenants({ includeInactive: isSuperadmin(req) });
-      const data = tenants.map((t) => {
+      const superadmin = isSuperadmin(req);
+      const tenants = await tenantManager.listTenants({ includeInactive: superadmin });
+      const visibleTenants = superadmin
+        ? tenants
+        : tenants.filter((t) => t.code === req.user?.tenant);
+
+      if (!superadmin && !req.user?.tenant) {
+        return res.status(403).json({ success: false, message: 'Tenant akun tidak tersedia' });
+      }
+
+      const data = visibleTenants.map((t) => {
         const metadata = typeof t.metadata === 'string' ? JSON.parse(t.metadata || '{}') : (t.metadata || {});
         return {
           id: t.id,
@@ -37,7 +46,7 @@ class TenantController {
           status: t.status,
           campus: metadata.campus || null,
           address: metadata.address || null,
-          ...(isSuperadmin(req) ? { db_name: t.db_name, created_at: t.created_at, updated_at: t.updated_at } : {}),
+          ...(superadmin ? { db_name: t.db_name, created_at: t.created_at, updated_at: t.updated_at } : {}),
         };
       });
       res.json({ success: true, data });

@@ -58,7 +58,7 @@ export default function FacultyDashboard() {
     if (authLoading) return
     if (forbidden) return
     switchTenant(code)
-  }, [code, authLoading, forbidden])
+  }, [code, authLoading, forbidden, switchTenant])
 
   useEffect(() => {
     if (authLoading || forbidden) return

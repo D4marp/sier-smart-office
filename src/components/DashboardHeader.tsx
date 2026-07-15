@@ -22,7 +22,7 @@ export default function DashboardHeader({ title, badge, sidebarOpen, onOpenSideb
     return () => clearInterval(t)
   }, [])
 
-  const roleBadge = badge || (user?.role === 'superadmin' ? 'Rektorat' : (user?.tenant_name || user?.tenant_code || '').toString())
+  const roleBadge = badge || (user?.tenant_name || user?.tenant_code || (user?.role === 'superadmin' ? 'Rektorat' : '')).toString()
 
   return (
     <header className="bg-[#0f2d59] text-white shadow-md border-b-4 border-[#d8ae47] z-10 shrink-0">
