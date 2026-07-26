@@ -7,9 +7,11 @@ export function getDefaultTenantForHost(hostname?: string | null): string | null
   return HOST_DEFAULT_TENANTS[host] || null
 }
 
+// Semua fakultas (termasuk Psikologi) memakai dashboard generik yang sama —
+// hanya beda data ruangan/perangkat sesuai database masing-masing tenant.
 export function getDashboardPathForTenant(tenantCode?: string | null): string {
   if (!tenantCode) return '/'
-  return tenantCode === 'psikologi' ? '/psikologi' : `/fakultas/${tenantCode}`
+  return `/fakultas/${tenantCode}`
 }
 
 export function getDefaultLoginForHost(hostname?: string | null) {
