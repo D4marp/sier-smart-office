@@ -113,6 +113,43 @@ Flow akan mencari device berdasarkan kombinasi `class_code` + `device_type`, lal
 
 `http://10.12.1.97:5000/api/v1/devices/:id/status`
 
+### FISIPOL — Umum Fakultas (I3.02.01 s/d I3.02.05)
+
+- [I3.02.01-COLLECTOR.json](I3.02.01-COLLECTOR.json)
+- [I3.02.02-COLLECTOR.json](I3.02.02-COLLECTOR.json)
+- [I3.02.03-COLLECTOR.json](I3.02.03-COLLECTOR.json)
+- [I3.02.04-COLLECTOR.json](I3.02.04-COLLECTOR.json)
+- [I3.02.05-COLLECTOR.json](I3.02.05-COLLECTOR.json)
+- [FISIPOL-GLOBAL-CONFIG.json](FISIPOL-GLOBAL-CONFIG.json) — import sekali saja (deklarasi modul `node-red-contrib-broadlink-control`)
+
+Arsitektur beda dengan flow `Q1.01.02-COLLECTOR.json` di atas: **tidak ada HTTP PATCH dari Node-RED**.
+Backend (`backend/controllers/DeviceController.js`, map `TARGETS`) yang membuka koneksi TCP
+langsung ke Node-RED lalu menulis status ke database sendiri setelah TCP terkirim sukses —
+Node-RED tinggal menyalakan/mematikan perangkat fisik. Tiap ruangan mendengarkan dua port TCP:
+
+| Ruangan | Port AC | Port Proyektor |
+|---|---|---|
+| I3.02.01 | 5201 | 5101 |
+| I3.02.02 | 5202 | 5102 |
+| I3.02.03 | 5203 | 5103 |
+| I3.02.04 | 5204 | 5104 |
+| I3.02.05 | 5205 | 5105 |
+
+Sudah didaftarkan di `TARGETS.ac` / `TARGETS.projector` pada `DeviceController.js` — begitu Node-RED
+di-deploy dan mendengarkan port ini, tombol ON/OFF di dashboard web langsung berfungsi.
+
+**AC**: Broadlink RM4 Pro, memakai kode IR hasil learning Fakultas Psikologi Q1.01.02 (unit AC/remote
+diasumsikan sama persis). Sebelum online: isi MAC + IP RM4 Pro tiap ruangan di node config
+`RM4PRO I3.02.0X` (cari-ganti string `REPLACE_MAC_RM4PRO_*` / `REPLACE_IP_RM4PRO_*`). Bila unit AC
+ruangan tsb ternyata beda merek/model, pakai node "Discover"/"learn" yang sudah disediakan di flow
+untuk merekam ulang kode IR-nya.
+
+**Proyektor**: rencana pakai ATEN SN3001P (device server RS232-ke-TCP) menggantikan RM4 Pro/IR yang
+dipakai Psikologi. **Command RS232 ON/OFF belum diisi** karena merek/model proyektor FISIPOL belum
+ditentukan saat flow ini dibuat — cari string `TODO` di function node `TODO: command RS232 ON/OFF I3.02.0X`
+dan isi sesuai manual proyektor yang terpasang, lalu ganti `REPLACE_IP_ATEN_*` / `REPLACE_PORT_ATEN`
+pada node `tcp request` dengan IP:port ATEN SN3001P yang sebenarnya.
+
 ---
 
 ## 📚 Next Steps

@@ -26,7 +26,13 @@ const TARGETS = {
       q10103: 5103,
       q10104: 5104,
       q10109: 5109,
-      q10111: 5111
+      q10111: 5111,
+      // FISIPOL — Umum Fakultas (proyektor via ATEN SN3001P, lihat backend/nodered/I3.02.0X-COLLECTOR.json)
+      i30201: 5101,
+      i30202: 5102,
+      i30203: 5103,
+      i30204: 5104,
+      i30205: 5105
     }
   },
   ac: {
@@ -37,7 +43,13 @@ const TARGETS = {
       q10103: 5203,
       q10104: 5204,
       q10109: 5209,
-      q10111: 5211
+      q10111: 5211,
+      // FISIPOL — Umum Fakultas (AC via Broadlink RM4 Pro, lihat backend/nodered/I3.02.0X-COLLECTOR.json)
+      i30201: 5201,
+      i30202: 5202,
+      i30203: 5203,
+      i30204: 5204,
+      i30205: 5205
     }
   }
 };
