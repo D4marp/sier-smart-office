@@ -451,6 +451,58 @@ export default function FacultyDashboard() {
     }
   }
 
+  // Kontrol unit individual — dipakai ruangan dengan >1 perangkat per tipe
+  // (mis. FISIPOL: 2 AC + 2 Lampu per ruangan). Unit ditentukan dari urutan
+  // device_eui (…-001 = unit 1, …-002 = unit 2), sama seperti backend.
+  const handleUnitControl = async (room: string, type: 'ac' | 'lamp', unit: 1 | 2, action: 'on' | 'off') => {
+    const key = `${room}-${type}${unit}-${action}`
+    try {
+      setControlLoading((prev) => ({ ...prev, [key]: true }))
+      if (type === 'ac') await nodeRedControlAPI.controlAcUnit(room, unit, action)
+      else await nodeRedControlAPI.controlLampUnit(room, unit, action)
+
+      const targetDbStatus = action === 'on' ? 'active' : 'idle'
+      const typeKey = type === 'ac' ? 'AC' : 'LAMP'
+      const sorted = devices
+        .filter((d) => d.location === room && d.device_type === typeKey)
+        .sort((a, b) => a.device_eui.localeCompare(b.device_eui))
+      const target = sorted[unit - 1]
+      if (target) await devicesAPI.updateStatus(target.id, targetDbStatus)
+      await loadDevices(true)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Gagal mengontrol ${type.toUpperCase()} unit ${unit} di ${room}`)
+    } finally {
+      setControlLoading((prev) => ({ ...prev, [key]: false }))
+    }
+  }
+
+  // Master control — menyalakan/mematikan SEMUA tipe perangkat yang bisa
+  // dikendalikan di satu ruangan sekaligus (mis. AC + Lampu bareng).
+  const handleAllControl = async (room: string, action: 'on' | 'off') => {
+    const key = `${room}-all-${action}`
+    try {
+      setControlLoading((prev) => ({ ...prev, [key]: true }))
+      const roomDevices = devices.filter((d) => d.location === room)
+      const typesPresent = Array.from(new Set(roomDevices.map((d) => d.device_type))).filter((t) => CONTROLLABLE_TYPES[t])
+
+      await Promise.all(typesPresent.map((t) => {
+        const controlType = CONTROLLABLE_TYPES[t].controlType
+        if (controlType === 'lamp') return nodeRedControlAPI.controlLamp(room, action)
+        if (controlType === 'ac') return nodeRedControlAPI.controlAC(room, action)
+        return nodeRedControlAPI.controlProjector(room, action)
+      }))
+
+      const targetDbStatus = action === 'on' ? 'active' : 'idle'
+      const matched = roomDevices.filter((d) => CONTROLLABLE_TYPES[d.device_type])
+      await Promise.all(matched.map((d) => devicesAPI.updateStatus(d.id, targetDbStatus)))
+      await loadDevices(true)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Gagal mengontrol semua perangkat di ${room}`)
+    } finally {
+      setControlLoading((prev) => ({ ...prev, [key]: false }))
+    }
+  }
+
   const controlRooms = useMemo(
     () => rooms.filter((r) => r !== 'Semua' && (selectedRoom === 'Semua' || r === selectedRoom)),
     [rooms, selectedRoom]
@@ -699,33 +751,74 @@ export default function FacultyDashboard() {
                             )}
                             {typesPresent.map((typeKey) => {
                               const meta = CONTROLLABLE_TYPES[typeKey]
-                              const onKey = `${room}-${meta.controlType}-on`
-                              const offKey = `${room}-${meta.controlType}-off`
+                              const unitDevices = roomDevices
+                                .filter((d) => d.device_type === typeKey)
+                                .sort((a, b) => a.device_eui.localeCompare(b.device_eui))
+                              const hasTwoUnits = (meta.controlType === 'ac' || meta.controlType === 'lamp') && unitDevices.length >= 2
+
+                              if (!hasTwoUnits) {
+                                const onKey = `${room}-${meta.controlType}-on`
+                                const offKey = `${room}-${meta.controlType}-off`
+                                return (
+                                  <ControlRow
+                                    key={typeKey}
+                                    icon={meta.icon}
+                                    label={meta.label}
+                                    onLoading={controlLoading[onKey]}
+                                    offLoading={controlLoading[offKey]}
+                                    onClickOn={() => handleRoomTypeControl(room, meta.controlType, 'on')}
+                                    onClickOff={() => handleRoomTypeControl(room, meta.controlType, 'off')}
+                                  />
+                                )
+                              }
+
+                              const unitType = meta.controlType as 'ac' | 'lamp'
+                              const bothOnKey = `${room}-${unitType}-on`
+                              const bothOffKey = `${room}-${unitType}-off`
                               return (
-                                <div key={typeKey} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-sm">{meta.icon}</span>
-                                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">{meta.label}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1.5">
-                                    <button
-                                      onClick={() => handleRoomTypeControl(room, meta.controlType, 'on')}
-                                      disabled={controlLoading[onKey]}
-                                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-all text-center disabled:opacity-50"
-                                    >
-                                      {controlLoading[onKey] ? '...' : 'ON'}
-                                    </button>
-                                    <button
-                                      onClick={() => handleRoomTypeControl(room, meta.controlType, 'off')}
-                                      disabled={controlLoading[offKey]}
-                                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-all text-center disabled:opacity-50"
-                                    >
-                                      {controlLoading[offKey] ? '...' : 'OFF'}
-                                    </button>
-                                  </div>
+                                <div key={typeKey} className="space-y-1.5 rounded-lg bg-slate-50 border border-slate-100 p-2">
+                                  <ControlRow
+                                    compact
+                                    icon={meta.icon}
+                                    label={`${meta.label} 1`}
+                                    onLoading={controlLoading[`${room}-${unitType}1-on`]}
+                                    offLoading={controlLoading[`${room}-${unitType}1-off`]}
+                                    onClickOn={() => handleUnitControl(room, unitType, 1, 'on')}
+                                    onClickOff={() => handleUnitControl(room, unitType, 1, 'off')}
+                                  />
+                                  <ControlRow
+                                    compact
+                                    icon={meta.icon}
+                                    label={`${meta.label} 2`}
+                                    onLoading={controlLoading[`${room}-${unitType}2-on`]}
+                                    offLoading={controlLoading[`${room}-${unitType}2-off`]}
+                                    onClickOn={() => handleUnitControl(room, unitType, 2, 'on')}
+                                    onClickOff={() => handleUnitControl(room, unitType, 2, 'off')}
+                                  />
+                                  <ControlRow
+                                    compact
+                                    icon={meta.icon}
+                                    label={`${meta.label} (Keduanya)`}
+                                    bold
+                                    onLoading={controlLoading[bothOnKey]}
+                                    offLoading={controlLoading[bothOffKey]}
+                                    onClickOn={() => handleRoomTypeControl(room, unitType, 'on')}
+                                    onClickOff={() => handleRoomTypeControl(room, unitType, 'off')}
+                                  />
                                 </div>
                               )
                             })}
+                            {typesPresent.length >= 2 && (
+                              <ControlRow
+                                icon="🔌"
+                                label="Semua Perangkat"
+                                bold
+                                onLoading={controlLoading[`${room}-all-on`]}
+                                offLoading={controlLoading[`${room}-all-off`]}
+                                onClickOn={() => handleAllControl(room, 'on')}
+                                onClickOff={() => handleAllControl(room, 'off')}
+                              />
+                            )}
                           </div>
                         </div>
                       )
@@ -820,6 +913,44 @@ export default function FacultyDashboard() {
             </>
           )}
         </main>
+      </div>
+    </div>
+  )
+}
+
+function ControlRow({
+  icon, label, onLoading, offLoading, onClickOn, onClickOff, compact, bold,
+}: {
+  icon: string
+  label: string
+  onLoading?: boolean
+  offLoading?: boolean
+  onClickOn: () => void
+  onClickOff: () => void
+  compact?: boolean
+  bold?: boolean
+}) {
+  return (
+    <div className={`flex items-center justify-between rounded-lg px-3 py-2 border ${bold ? 'bg-white border-slate-200' : compact ? 'bg-white border-slate-100' : 'bg-slate-50 border-slate-100'}`}>
+      <div className="flex items-center space-x-2">
+        <span className="text-sm">{icon}</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${bold ? 'text-slate-900' : 'text-slate-700'}`}>{label}</span>
+      </div>
+      <div className="flex items-center space-x-1.5">
+        <button
+          onClick={onClickOn}
+          disabled={onLoading}
+          className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-all text-center disabled:opacity-50"
+        >
+          {onLoading ? '...' : 'ON'}
+        </button>
+        <button
+          onClick={onClickOff}
+          disabled={offLoading}
+          className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-all text-center disabled:opacity-50"
+        >
+          {offLoading ? '...' : 'OFF'}
+        </button>
       </div>
     </div>
   )

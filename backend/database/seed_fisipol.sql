@@ -6,8 +6,13 @@
 -- (classes.name, devices.device_eui).
 --
 -- Ruangan: "Umum Fakultas" — I3.02.01 s/d I3.02.05
--- Perangkat per ruang mengikuti setup Fakultas Psikologi:
---   AC (climate-control) + Lampu (lighting-control) + Sensor Suhu VS321 (environment-sensor)
+-- Perangkat per ruang (beda dengan Psikologi yang cuma 1 unit AC + 1 lampu):
+--   2x AC (climate-control, RM4 Pro terpisah per unit)
+--   2x Lampu (lighting-control, relay WS501/WS502 terpisah per unit)
+--   1x Sensor Suhu VS321 (environment-sensor)
+-- Device EUI berakhiran -001/-002 menandakan unit 1/2 (dipakai backend
+-- DeviceController.js TARGETS.ac1/ac2/lamp1/lamp2 untuk kontrol independen
+-- per unit — lihat backend/nodered/I3.02.0X-COLLECTOR.json).
 --
 -- Jalankan: mysql -u root smart_energy_fisipol < seed_fisipol.sql
 -- =============================================================
@@ -22,32 +27,60 @@ INSERT IGNORE INTO classes (name, description, building, floor, status) VALUES
 ('I3.02.04', 'Umum Fakultas - Ruang I3.02.04', 'Umum Fakultas', 2, 'active'),
 ('I3.02.05', 'Umum Fakultas - Ruang I3.02.05', 'Umum Fakultas', 2, 'active');
 
--- ── Perangkat AC + Lampu per ruang ──
+-- ── Perangkat 2x AC + 2x Lampu per ruang ──
 -- Status 'offline'/'registered': perangkat sudah terdaftar di sistem, namun
 -- belum ada instalasi IoT fisik yang aktif (bukan data konsumsi fiktif).
 -- Update status/current_power/current_temperature setelah perangkat fisik
 -- benar-benar terpasang dan online.
 INSERT IGNORE INTO devices
   (class_id, device_eui, device_name, device_type, application_type, location, device_secret, power_rating, current_power, efficiency_rating, status, iot_status)
-SELECT id, 'AC-I30201-001',   'AC Unit I3.02.01',  'AC',   'climate-control',  'I3.02.01', 'secret_ac_i30201_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.01'
+SELECT id, 'AC-I30201-001',   'AC Unit 1 I3.02.01',  'AC',   'climate-control',  'I3.02.01', 'secret_ac_i30201_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.01'
 UNION ALL
-SELECT id, 'LAMP-I30201-001', 'Lighting I3.02.01', 'LAMP', 'lighting-control', 'I3.02.01', 'secret_lamp_i30201_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.01'
+SELECT id, 'AC-I30201-002',   'AC Unit 2 I3.02.01',  'AC',   'climate-control',  'I3.02.01', 'secret_ac_i30201_002',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.01'
 UNION ALL
-SELECT id, 'AC-I30202-001',   'AC Unit I3.02.02',  'AC',   'climate-control',  'I3.02.02', 'secret_ac_i30202_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.02'
+SELECT id, 'LAMP-I30201-001', 'Lighting 1 I3.02.01', 'LAMP', 'lighting-control', 'I3.02.01', 'secret_lamp_i30201_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.01'
 UNION ALL
-SELECT id, 'LAMP-I30202-001', 'Lighting I3.02.02', 'LAMP', 'lighting-control', 'I3.02.02', 'secret_lamp_i30202_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.02'
+SELECT id, 'LAMP-I30201-002', 'Lighting 2 I3.02.01', 'LAMP', 'lighting-control', 'I3.02.01', 'secret_lamp_i30201_002', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.01'
 UNION ALL
-SELECT id, 'AC-I30203-001',   'AC Unit I3.02.03',  'AC',   'climate-control',  'I3.02.03', 'secret_ac_i30203_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.03'
+SELECT id, 'AC-I30202-001',   'AC Unit 1 I3.02.02',  'AC',   'climate-control',  'I3.02.02', 'secret_ac_i30202_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.02'
 UNION ALL
-SELECT id, 'LAMP-I30203-001', 'Lighting I3.02.03', 'LAMP', 'lighting-control', 'I3.02.03', 'secret_lamp_i30203_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.03'
+SELECT id, 'AC-I30202-002',   'AC Unit 2 I3.02.02',  'AC',   'climate-control',  'I3.02.02', 'secret_ac_i30202_002',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.02'
 UNION ALL
-SELECT id, 'AC-I30204-001',   'AC Unit I3.02.04',  'AC',   'climate-control',  'I3.02.04', 'secret_ac_i30204_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.04'
+SELECT id, 'LAMP-I30202-001', 'Lighting 1 I3.02.02', 'LAMP', 'lighting-control', 'I3.02.02', 'secret_lamp_i30202_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.02'
 UNION ALL
-SELECT id, 'LAMP-I30204-001', 'Lighting I3.02.04', 'LAMP', 'lighting-control', 'I3.02.04', 'secret_lamp_i30204_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.04'
+SELECT id, 'LAMP-I30202-002', 'Lighting 2 I3.02.02', 'LAMP', 'lighting-control', 'I3.02.02', 'secret_lamp_i30202_002', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.02'
 UNION ALL
-SELECT id, 'AC-I30205-001',   'AC Unit I3.02.05',  'AC',   'climate-control',  'I3.02.05', 'secret_ac_i30205_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.05'
+SELECT id, 'AC-I30203-001',   'AC Unit 1 I3.02.03',  'AC',   'climate-control',  'I3.02.03', 'secret_ac_i30203_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.03'
 UNION ALL
-SELECT id, 'LAMP-I30205-001', 'Lighting I3.02.05', 'LAMP', 'lighting-control', 'I3.02.05', 'secret_lamp_i30205_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.05';
+SELECT id, 'AC-I30203-002',   'AC Unit 2 I3.02.03',  'AC',   'climate-control',  'I3.02.03', 'secret_ac_i30203_002',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.03'
+UNION ALL
+SELECT id, 'LAMP-I30203-001', 'Lighting 1 I3.02.03', 'LAMP', 'lighting-control', 'I3.02.03', 'secret_lamp_i30203_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.03'
+UNION ALL
+SELECT id, 'LAMP-I30203-002', 'Lighting 2 I3.02.03', 'LAMP', 'lighting-control', 'I3.02.03', 'secret_lamp_i30203_002', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.03'
+UNION ALL
+SELECT id, 'AC-I30204-001',   'AC Unit 1 I3.02.04',  'AC',   'climate-control',  'I3.02.04', 'secret_ac_i30204_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.04'
+UNION ALL
+SELECT id, 'AC-I30204-002',   'AC Unit 2 I3.02.04',  'AC',   'climate-control',  'I3.02.04', 'secret_ac_i30204_002',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.04'
+UNION ALL
+SELECT id, 'LAMP-I30204-001', 'Lighting 1 I3.02.04', 'LAMP', 'lighting-control', 'I3.02.04', 'secret_lamp_i30204_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.04'
+UNION ALL
+SELECT id, 'LAMP-I30204-002', 'Lighting 2 I3.02.04', 'LAMP', 'lighting-control', 'I3.02.04', 'secret_lamp_i30204_002', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.04'
+UNION ALL
+SELECT id, 'AC-I30205-001',   'AC Unit 1 I3.02.05',  'AC',   'climate-control',  'I3.02.05', 'secret_ac_i30205_001',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.05'
+UNION ALL
+SELECT id, 'AC-I30205-002',   'AC Unit 2 I3.02.05',  'AC',   'climate-control',  'I3.02.05', 'secret_ac_i30205_002',   3.0, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.05'
+UNION ALL
+SELECT id, 'LAMP-I30205-001', 'Lighting 1 I3.02.05', 'LAMP', 'lighting-control', 'I3.02.05', 'secret_lamp_i30205_001', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.05'
+UNION ALL
+SELECT id, 'LAMP-I30205-002', 'Lighting 2 I3.02.05', 'LAMP', 'lighting-control', 'I3.02.05', 'secret_lamp_i30205_002', 1.6, 0, 0, 'offline', 'registered' FROM classes WHERE name = 'I3.02.05';
+
+-- ── Selaraskan nama device -001 dari seed lama (skema 1 unit per tipe,
+--    "AC Unit I3.02.0X" / "Lighting I3.02.0X") ke skema 2 unit ("AC Unit 1 ...").
+--    Idempotent — tidak berpengaruh bila sudah pernah dijalankan.
+UPDATE devices SET device_name = CONCAT('AC Unit 1 ', location)
+  WHERE device_type = 'AC' AND device_eui LIKE '%-001' AND device_name NOT LIKE 'AC Unit 1 %' AND device_name NOT LIKE 'AC Unit 2 %';
+UPDATE devices SET device_name = CONCAT('Lighting 1 ', location)
+  WHERE device_type = 'LAMP' AND device_eui LIKE '%-001' AND device_name NOT LIKE 'Lighting 1 %' AND device_name NOT LIKE 'Lighting 2 %';
 
 -- ── Sensor Suhu VS321 per ruang (temperature + humidity) ──
 INSERT IGNORE INTO devices

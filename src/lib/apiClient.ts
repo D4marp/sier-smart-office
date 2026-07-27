@@ -469,9 +469,11 @@ export const tenantsAPI = {
 // ============ NODE-RED DEVICE TYPE CONTROL API ============
 // Kontrol lampu/AC/proyektor lewat backend (bukan langsung ke Node-RED dari
 // browser), sehingga tetap terikat pada tenant aktif (header X-Tenant).
+type NodeRedDeviceType = 'lamp' | 'ac' | 'projector' | 'ac1' | 'ac2' | 'lamp1' | 'lamp2';
+
 async function nodeRedCall(
   classCode: string,
-  deviceType: 'lamp' | 'ac' | 'projector',
+  deviceType: NodeRedDeviceType,
   state: 'on' | 'off'
 ): Promise<any> {
   const response = await apiCall<{ success: boolean; data: any }>(
@@ -485,7 +487,8 @@ async function nodeRedCall(
 }
 
 export const nodeRedControlAPI = {
-  // Lampu (WS501/WS502 compatibility)
+  // Lampu (WS501/WS502 compatibility) — kedua unit sekaligus (ruangan 1 lampu saja
+  // tetap pakai ini; ruangan 2 lampu, ini = "keduanya sekaligus").
   controlLamp: async (classCode: string, state: 'on' | 'off') => {
     return nodeRedCall(classCode, 'lamp', state);
   },
@@ -495,9 +498,17 @@ export const nodeRedControlAPI = {
     return nodeRedCall(classCode, 'projector', state);
   },
 
-  // AC
+  // AC — kedua unit sekaligus (lihat catatan controlLamp di atas)
   controlAC: async (classCode: string, state: 'on' | 'off') => {
     return nodeRedCall(classCode, 'ac', state);
+  },
+
+  // Unit individual (ruangan dengan >1 AC/lampu, mis. FISIPOL)
+  controlAcUnit: async (classCode: string, unit: 1 | 2, state: 'on' | 'off') => {
+    return nodeRedCall(classCode, (unit === 1 ? 'ac1' : 'ac2') as NodeRedDeviceType, state);
+  },
+  controlLampUnit: async (classCode: string, unit: 1 | 2, state: 'on' | 'off') => {
+    return nodeRedCall(classCode, (unit === 1 ? 'lamp1' : 'lamp2') as NodeRedDeviceType, state);
   },
 };
 
