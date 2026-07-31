@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { Zap, Activity, ShieldCheck, Power, RefreshCw, SlidersHorizontal } from 'lucide-react'
-import { devicesAPI, consumptionAPI, tenantsAPI } from '@/lib/apiClient'
+import { devicesAPI, consumptionAPI, tenantsAPI, nodeRedControlAPI } from '@/lib/apiClient'
 import { useAuth } from '@/components/AuthProvider'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
@@ -24,17 +24,28 @@ interface TenantMeta {
   campus?: string | null
 }
 
-const DEVICE_TYPE_META: Record<string, { label: string; icon: string }> = {
-  AC: { label: 'AC', icon: '❄️' },
-  LAMP: { label: 'Lampu', icon: '💡' },
-  PROJECTOR: { label: 'Proyektor', icon: '📽️' },
+// Ikon & label kontrol dikenal untuk tipe perangkat yang bisa dikendalikan lewat
+// Node-RED (lamp/ac/projector). Tipe lain (mis. SENSOR) tidak ditampilkan tombolnya.
+const CONTROLLABLE_TYPES: Record<string, { label: string; icon: string; controlType: 'lamp' | 'ac' | 'projector' }> = {
+  AC: { label: 'AC', icon: '❄️', controlType: 'ac' },
+  LAMP: { label: 'Lampu', icon: '💡', controlType: 'lamp' },
+  PROJECTOR: { label: 'Proyektor', icon: '📽️', controlType: 'projector' },
 }
 
-function deviceTypeMeta(type: string) {
-  return DEVICE_TYPE_META[type] || { label: type, icon: '🔌' }
+// Ruangan dengan >1 perangkat fisik per tipe punya dua pola kontrol berbeda:
+// - FISIPOL: device_eui berakhiran -001/-002 (dua RM4 Pro/relay fisik terpisah),
+//   sehingga bisa dikendalikan independen lewat endpoint per-unit backend
+//   (TARGETS.ac1/ac2/lamp1/lamp2 di DeviceController.js).
+// - FIKK dan fakultas lain (device_eui = EUI LoRaWAN asli, tanpa akhiran -00N):
+//   kontrol per-unit fisik sudah tersedia lewat tombol per baris di tabel status
+//   perangkat di bawah (per device_id), jadi kartu ruangan cukup tombol
+//   "nyalakan/matikan semua unit tipe ini" saja — memanggil unit individual lewat
+//   endpoint ac1/ac2 di sini akan salah sasaran (endpoint itu berarti "unit 1/2"
+//   khusus untuk pola FISIPOL, bukan unit sembarang fakultas lain).
+function isFisipolUnitStyle(unitDevices: Device[]) {
+  return unitDevices.length >= 2 && unitDevices.every((d) => /-0*\d+$/.test(d.device_eui))
 }
 
-// Custom Tooltip for Recharts
 function CustomTooltip({ active, payload, label, unit = 'kW' }: any) {
   if (active && payload && payload.length) {
     return (
@@ -61,8 +72,9 @@ function CustomTooltip({ active, payload, label, unit = 'kW' }: any) {
 
 // Dashboard fakultas generik — dipakai untuk seluruh fakultas (bukan file per-fakultas).
 // Fitur lengkap: total konsumsi, filter ruangan, grafik tren harian/mingguan/bulanan,
-// kartu kontrol ON/OFF per ruangan, dan tabel status perangkat — identik untuk semua
-// fakultas, hanya datanya yang berbeda (satu database per fakultas).
+// kartu kontrol ON/OFF per ruangan (toggle-semua, dan per-unit individual bila
+// didukung polanya), dan tabel status perangkat — identik untuk semua fakultas,
+// hanya datanya yang berbeda (satu database per fakultas).
 export default function FacultyDashboard() {
   const params = useParams<{ code: string }>()
   const code = String(params.code || '').toLowerCase()
@@ -79,11 +91,9 @@ export default function FacultyDashboard() {
 
   const [energyData, setEnergyData] = useState<ChartDataPoint[]>([])
   const [energyChartLabel, setEnergyChartLabel] = useState('7 HARI TERAKHIR')
-  const [energyChartUnit, setEnergyChartUnit] = useState<'kW' | 'kWh'>('kWh')
   const [totalConsumption, setTotalConsumption] = useState(0)
   const [consumptionChange, setConsumptionChange] = useState(0)
   const [monthlyTrendData, setMonthlyTrendData] = useState<MonthlyTrendPoint[]>([])
-  const [nodeRedLoading, setNodeRedLoading] = useState<Record<string, boolean>>({})
 
   const isSuperadmin = user?.role === 'superadmin'
   const forbidden = !isSuperadmin && !!user?.tenant_code && user.tenant_code !== code
@@ -158,7 +168,6 @@ export default function FacultyDashboard() {
     return { liveAcPower, liveLampPower, avgTemp, onlineDevicesCount, roomCount: rooms.length - 1 }
   }, [filteredDevices, rooms])
 
-  // Agregasi konsumsi hari/minggu/bulan (identik dengan logika lama halaman Psikologi)
   useEffect(() => {
     const loadConsumptionData = async () => {
       if (!devices || devices.length === 0) return
@@ -189,7 +198,6 @@ export default function FacultyDashboard() {
           const previousMonthTotal = monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].ac + monthlyData[monthlyData.length - 2].lamp : 0
 
           setEnergyChartLabel('6 BULAN TERAKHIR')
-          setEnergyChartUnit('kWh')
           setTotalConsumption(total)
           setConsumptionChange(previousMonthTotal > 0 ? ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100 : 0)
           setEnergyData(monthlyData.map((item) => ({ time: item.month, ac: Math.round(item.ac * 100) / 100, lamp: Math.round(item.lamp * 100) / 100 })))
@@ -197,7 +205,6 @@ export default function FacultyDashboard() {
         }
 
         const today = new Date()
-        setEnergyChartUnit('kWh')
 
         if (timeRange === 'week') {
           const currentPeriods = buildMonthWorkWeekPeriods(today)
@@ -300,32 +307,99 @@ export default function FacultyDashboard() {
     fetchMonthlyTrend()
   }, [devices, selectedRoom])
 
+  // ── Kontrol ON/OFF per perangkat & per tipe perangkat (ruangan) ──
+  const [controlLoading, setControlLoading] = useState<Record<string, boolean>>({})
+
   const handleDeviceControl = async (deviceId: number, currentStatus: string) => {
     const action = currentStatus === 'active' || currentStatus === 'online' ? 'off' : 'on'
+    const key = `device-${deviceId}`
     try {
-      setRefreshing(true)
+      setControlLoading((prev) => ({ ...prev, [key]: true }))
       await devicesAPI.control(deviceId, action)
       await loadDevices(true)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Gagal mengontrol perangkat')
     } finally {
-      setRefreshing(false)
+      setControlLoading((prev) => ({ ...prev, [key]: false }))
     }
   }
 
-  const handleRoomTypeControl = async (room: string, deviceType: string, action: 'on' | 'off') => {
-    const key = `${room}-${deviceType}-${action}`
+  const handleRoomTypeControl = async (room: string, controlType: 'lamp' | 'ac' | 'projector', action: 'on' | 'off') => {
+    const key = `${room}-${controlType}-${action}`
     try {
-      setNodeRedLoading((prev) => ({ ...prev, [key]: true }))
-      const roomDevices = devices.filter((d) => d.location === room && d.device_type === deviceType)
-      await Promise.all(roomDevices.map((d) => devicesAPI.control(d.id, action)))
+      setControlLoading((prev) => ({ ...prev, [key]: true }))
+      if (controlType === 'lamp') await nodeRedControlAPI.controlLamp(room, action)
+      else if (controlType === 'ac') await nodeRedControlAPI.controlAC(room, action)
+      else await nodeRedControlAPI.controlProjector(room, action)
+
+      const targetDbStatus = action === 'on' ? 'active' : 'idle'
+      const typeKey = Object.entries(CONTROLLABLE_TYPES).find(([, v]) => v.controlType === controlType)?.[0]
+      const matched = devices.filter((d) => d.location === room && d.device_type === typeKey)
+      await Promise.all(matched.map((d) => devicesAPI.updateStatus(d.id, targetDbStatus)))
       await loadDevices(true)
     } catch (err) {
-      alert(err instanceof Error ? err.message : `Gagal mengontrol ${deviceType} di ${room}`)
+      alert(err instanceof Error ? err.message : `Gagal mengontrol ${controlType} di ${room}`)
     } finally {
-      setNodeRedLoading((prev) => ({ ...prev, [key]: false }))
+      setControlLoading((prev) => ({ ...prev, [key]: false }))
     }
   }
+
+  // Kontrol unit individual — hanya dipakai ruangan bergaya FISIPOL (>1 perangkat
+  // fisik per tipe dengan device_eui berakhiran -001/-002). Unit ditentukan dari
+  // urutan device_eui (…-001 = unit 1, …-002 = unit 2), sama seperti backend.
+  const handleUnitControl = async (room: string, type: 'ac' | 'lamp', unit: 1 | 2, action: 'on' | 'off') => {
+    const key = `${room}-${type}${unit}-${action}`
+    try {
+      setControlLoading((prev) => ({ ...prev, [key]: true }))
+      if (type === 'ac') await nodeRedControlAPI.controlAcUnit(room, unit, action)
+      else await nodeRedControlAPI.controlLampUnit(room, unit, action)
+
+      const targetDbStatus = action === 'on' ? 'active' : 'idle'
+      const typeKey = type === 'ac' ? 'AC' : 'LAMP'
+      const sorted = devices
+        .filter((d) => d.location === room && d.device_type === typeKey)
+        .sort((a, b) => a.device_eui.localeCompare(b.device_eui))
+      const target = sorted[unit - 1]
+      if (target) await devicesAPI.updateStatus(target.id, targetDbStatus)
+      await loadDevices(true)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Gagal mengontrol ${type.toUpperCase()} unit ${unit} di ${room}`)
+    } finally {
+      setControlLoading((prev) => ({ ...prev, [key]: false }))
+    }
+  }
+
+  // Master control — menyalakan/mematikan SEMUA tipe perangkat yang bisa
+  // dikendalikan di satu ruangan sekaligus (mis. AC + Lampu bareng).
+  const handleAllControl = async (room: string, action: 'on' | 'off') => {
+    const key = `${room}-all-${action}`
+    try {
+      setControlLoading((prev) => ({ ...prev, [key]: true }))
+      const roomDevices = devices.filter((d) => d.location === room)
+      const typesPresent = Array.from(new Set(roomDevices.map((d) => d.device_type))).filter((t) => CONTROLLABLE_TYPES[t])
+
+      await Promise.all(typesPresent.map((t) => {
+        const controlType = CONTROLLABLE_TYPES[t].controlType
+        if (controlType === 'lamp') return nodeRedControlAPI.controlLamp(room, action)
+        if (controlType === 'ac') return nodeRedControlAPI.controlAC(room, action)
+        return nodeRedControlAPI.controlProjector(room, action)
+      }))
+
+      const targetDbStatus = action === 'on' ? 'active' : 'idle'
+      const matched = roomDevices.filter((d) => CONTROLLABLE_TYPES[d.device_type])
+      await Promise.all(matched.map((d) => devicesAPI.updateStatus(d.id, targetDbStatus)))
+      await loadDevices(true)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Gagal mengontrol semua perangkat di ${room}`)
+    } finally {
+      setControlLoading((prev) => ({ ...prev, [key]: false }))
+    }
+  }
+
+  const controlRooms = useMemo(
+    () => rooms.filter((r) => r !== 'Semua' && (selectedRoom === 'Semua' || r === selectedRoom)),
+    [rooms, selectedRoom]
+  )
 
   if (forbidden) {
     return (
@@ -342,6 +416,9 @@ export default function FacultyDashboard() {
     )
   }
 
+  const facultyName = tenant?.name || `Fakultas ${code.toUpperCase()}`
+  const title = `Dashboard Energi ${facultyName}`
+
   if (loading) {
     return (
       <div className="flex h-screen bg-[#0f2d59] items-center justify-center">
@@ -352,10 +429,6 @@ export default function FacultyDashboard() {
       </div>
     )
   }
-
-  const facultyName = tenant?.name || `Fakultas ${code.toUpperCase()}`
-  const title = `Dashboard Energi ${facultyName}`
-  const roomTypes = Array.from(new Set(devices.filter((d) => d.device_type !== 'SENSOR').map((d) => d.device_type)))
 
   return (
     <div className="flex h-screen overflow-hidden text-slate-800" style={{
@@ -483,8 +556,8 @@ export default function FacultyDashboard() {
                       <BarChart data={energyData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                         <XAxis dataKey="time" stroke="#475569" fontSize={11} fontWeight={600} tickLine={false} />
-                        <YAxis stroke="#475569" fontSize={11} fontWeight={600} tickLine={false} unit={` ${energyChartUnit}`} />
-                        <Tooltip content={<CustomTooltip unit={energyChartUnit} />} />
+                        <YAxis stroke="#475569" fontSize={11} fontWeight={600} tickLine={false} unit=" kWh" />
+                        <Tooltip content={<CustomTooltip unit="kWh" />} />
                         <Legend iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 10, fontWeight: 700 }} />
                         <Bar dataKey="ac" fill="#d8ae47" radius={[4, 4, 0, 0]} name="Air Conditioner" />
                         <Bar dataKey="lamp" fill="#483688" radius={[4, 4, 0, 0]} name="Lighting System" />
@@ -525,17 +598,17 @@ export default function FacultyDashboard() {
               </div>
 
               {/* Room Control Cards */}
-              {selectedRoom === 'Semua' && roomTypes.length > 0 && (
+              {controlRooms.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                   <div className="mb-4">
                     <h3 className="text-sm font-bold text-slate-800 tracking-wider uppercase">🕹️ KONTROL ON/OFF RUANGAN {facultyName.toUpperCase()}</h3>
                     <p className="text-xs text-slate-500 mt-0.5">Nyalakan/matikan perangkat per tipe di setiap ruangan</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {rooms.filter((r) => r !== 'Semua').map((room) => {
+                    {controlRooms.map((room) => {
                       const roomDevices = devices.filter((d) => d.location === room)
                       const isAnyActive = roomDevices.some((d) => d.status === 'active' || d.status === 'online')
-                      const typesInRoom = roomTypes.filter((t) => roomDevices.some((d) => d.device_type === t))
+                      const typesPresent = Array.from(new Set(roomDevices.map((d) => d.device_type))).filter((t) => CONTROLLABLE_TYPES[t])
 
                       return (
                         <div key={room} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-300">
@@ -547,35 +620,81 @@ export default function FacultyDashboard() {
                             <span className={`inline-flex items-center w-2.5 h-2.5 rounded-full ${isAnyActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                           </div>
                           <div className="space-y-2">
-                            {typesInRoom.map((type) => {
-                              const meta = deviceTypeMeta(type)
-                              const onKey = `${room}-${type}-on`
-                              const offKey = `${room}-${type}-off`
+                            {typesPresent.length === 0 && (
+                              <p className="text-[10px] text-slate-400 text-center py-2">Tidak ada perangkat yang bisa dikendalikan</p>
+                            )}
+                            {typesPresent.map((typeKey) => {
+                              const meta = CONTROLLABLE_TYPES[typeKey]
+                              const unitDevices = roomDevices
+                                .filter((d) => d.device_type === typeKey)
+                                .sort((a, b) => a.device_eui.localeCompare(b.device_eui))
+                              const hasTwoUnits = (meta.controlType === 'ac' || meta.controlType === 'lamp') && isFisipolUnitStyle(unitDevices)
+
+                              if (!hasTwoUnits) {
+                                const onKey = `${room}-${meta.controlType}-on`
+                                const offKey = `${room}-${meta.controlType}-off`
+                                return (
+                                  <ControlRow
+                                    key={typeKey}
+                                    icon={meta.icon}
+                                    label={meta.label}
+                                    onLoading={controlLoading[onKey]}
+                                    offLoading={controlLoading[offKey]}
+                                    onClickOn={() => handleRoomTypeControl(room, meta.controlType, 'on')}
+                                    onClickOff={() => handleRoomTypeControl(room, meta.controlType, 'off')}
+                                  />
+                                )
+                              }
+
+                              // FISIPOL: 2 unit fisik dengan device_eui -001/-002, bisa
+                              // dikendalikan independen lewat endpoint per-unit backend.
+                              const unitType = meta.controlType as 'ac' | 'lamp'
+                              const bothOnKey = `${room}-${unitType}-on`
+                              const bothOffKey = `${room}-${unitType}-off`
                               return (
-                                <div key={type} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-sm">{meta.icon}</span>
-                                    <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">{meta.label}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1.5">
-                                    <button
-                                      onClick={() => handleRoomTypeControl(room, type, 'on')}
-                                      disabled={nodeRedLoading[onKey]}
-                                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-all text-center disabled:opacity-50"
-                                    >
-                                      {nodeRedLoading[onKey] ? '...' : 'ON'}
-                                    </button>
-                                    <button
-                                      onClick={() => handleRoomTypeControl(room, type, 'off')}
-                                      disabled={nodeRedLoading[offKey]}
-                                      className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-all text-center disabled:opacity-50"
-                                    >
-                                      {nodeRedLoading[offKey] ? '...' : 'OFF'}
-                                    </button>
-                                  </div>
+                                <div key={typeKey} className="space-y-1.5 rounded-lg bg-slate-50 border border-slate-100 p-2">
+                                  <ControlRow
+                                    compact
+                                    icon={meta.icon}
+                                    label={`${meta.label} 1`}
+                                    onLoading={controlLoading[`${room}-${unitType}1-on`]}
+                                    offLoading={controlLoading[`${room}-${unitType}1-off`]}
+                                    onClickOn={() => handleUnitControl(room, unitType, 1, 'on')}
+                                    onClickOff={() => handleUnitControl(room, unitType, 1, 'off')}
+                                  />
+                                  <ControlRow
+                                    compact
+                                    icon={meta.icon}
+                                    label={`${meta.label} 2`}
+                                    onLoading={controlLoading[`${room}-${unitType}2-on`]}
+                                    offLoading={controlLoading[`${room}-${unitType}2-off`]}
+                                    onClickOn={() => handleUnitControl(room, unitType, 2, 'on')}
+                                    onClickOff={() => handleUnitControl(room, unitType, 2, 'off')}
+                                  />
+                                  <ControlRow
+                                    compact
+                                    icon={meta.icon}
+                                    label={`${meta.label} (Keduanya)`}
+                                    bold
+                                    onLoading={controlLoading[bothOnKey]}
+                                    offLoading={controlLoading[bothOffKey]}
+                                    onClickOn={() => handleRoomTypeControl(room, unitType, 'on')}
+                                    onClickOff={() => handleRoomTypeControl(room, unitType, 'off')}
+                                  />
                                 </div>
                               )
                             })}
+                            {typesPresent.length >= 2 && (
+                              <ControlRow
+                                icon="🔌"
+                                label="Semua Perangkat"
+                                bold
+                                onLoading={controlLoading[`${room}-all-on`]}
+                                offLoading={controlLoading[`${room}-all-off`]}
+                                onClickOn={() => handleAllControl(room, 'on')}
+                                onClickOff={() => handleAllControl(room, 'off')}
+                              />
+                            )}
                           </div>
                         </div>
                       )
@@ -596,12 +715,11 @@ export default function FacultyDashboard() {
                     <span>Kelola perangkat di halaman Perangkat →</span>
                   </Link>
                 </div>
-
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-wider">
-                        <th className="pb-3 px-4 pt-3">Lokasi</th>
+                        <th className="pb-3 px-4 pt-3">Ruangan</th>
                         <th className="pb-3 px-4 pt-3">Nama Perangkat</th>
                         <th className="pb-3 px-4 pt-3">Tipe</th>
                         <th className="pb-3 px-4 pt-3 text-right">Daya Aktif (kW)</th>
@@ -615,16 +733,23 @@ export default function FacultyDashboard() {
                       {filteredDevices.filter((d) => d.device_type !== 'SENSOR').map((device) => {
                         const online = isDeviceOnline(device)
                         const active = device.status === 'active' || device.status === 'online'
-                        const livePower = active ? parseFloat(String(device.current_power)) || parseFloat(String(device.power_rating)) || 0 : 0.0
-                        const meta = deviceTypeMeta(device.device_type)
+                        const livePower = active ? (parseFloat(String(device.current_power)) || parseFloat(String(device.power_rating)) || 0) : 0
+                        const controllable = !!CONTROLLABLE_TYPES[device.device_type]
+                        const deviceKey = `device-${device.id}`
 
                         return (
                           <tr key={device.id} className="hover:bg-slate-50/50 transition-all odd:bg-white even:bg-slate-50/20">
                             <td className="py-3.5 px-4 font-bold text-slate-900">{device.location}</td>
                             <td className="py-3.5 px-4 text-slate-600">{device.device_name}</td>
                             <td className="py-3.5 px-4">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase border bg-blue-50 text-blue-700 border-blue-200">
-                                {meta.icon} {device.device_type}
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${
+                                device.device_type === 'AC'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                  : device.device_type === 'LAMP'
+                                    ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                    : 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                              }`}>
+                                {device.device_type}
                               </span>
                             </td>
                             <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900">{livePower.toFixed(2)} kW</td>
@@ -643,15 +768,20 @@ export default function FacultyDashboard() {
                               </span>
                             </td>
                             <td className="py-3.5 px-4 text-center">
-                              <button
-                                onClick={() => handleDeviceControl(device.id, device.status || 'offline')}
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black border transition-all ${
-                                  active ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-                                }`}
-                              >
-                                <Power size={11} />
-                                {active ? 'MATIKAN' : 'NYALAKAN'}
-                              </button>
+                              {controllable && (
+                                <button
+                                  onClick={() => handleDeviceControl(device.id, device.status || 'offline')}
+                                  disabled={controlLoading[deviceKey]}
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black border transition-all disabled:opacity-50 ${
+                                    active
+                                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                                  }`}
+                                >
+                                  <Power size={11} />
+                                  {controlLoading[deviceKey] ? '...' : active ? 'MATIKAN' : 'NYALAKAN'}
+                                </button>
+                              )}
                             </td>
                           </tr>
                         )
@@ -680,6 +810,44 @@ function KPICard({ title, value, change, icon, bgColor }: {
           <p className="text-xs text-slate-400 font-semibold">{change}</p>
         </div>
         <div className={`${bgColor} p-3 rounded-lg border border-slate-100 flex items-center justify-center`}>{icon}</div>
+      </div>
+    </div>
+  )
+}
+
+function ControlRow({
+  icon, label, onLoading, offLoading, onClickOn, onClickOff, compact, bold,
+}: {
+  icon: string
+  label: string
+  onLoading?: boolean
+  offLoading?: boolean
+  onClickOn: () => void
+  onClickOff: () => void
+  compact?: boolean
+  bold?: boolean
+}) {
+  return (
+    <div className={`flex items-center justify-between rounded-lg px-3 py-2 border ${bold ? 'bg-white border-slate-200' : compact ? 'bg-white border-slate-100' : 'bg-slate-50 border-slate-100'}`}>
+      <div className="flex items-center space-x-2">
+        <span className="text-sm">{icon}</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${bold ? 'text-slate-900' : 'text-slate-700'}`}>{label}</span>
+      </div>
+      <div className="flex items-center space-x-1.5">
+        <button
+          onClick={onClickOn}
+          disabled={onLoading}
+          className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-all text-center disabled:opacity-50"
+        >
+          {onLoading ? '...' : 'ON'}
+        </button>
+        <button
+          onClick={onClickOff}
+          disabled={offLoading}
+          className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-all text-center disabled:opacity-50"
+        >
+          {offLoading ? '...' : 'OFF'}
+        </button>
       </div>
     </div>
   )

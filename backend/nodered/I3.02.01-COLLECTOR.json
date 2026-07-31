@@ -1,0 +1,1816 @@
+[
+    {
+        "id": "fp_01_tab",
+        "type": "tab",
+        "label": "I3.02.01 (FISIPOL)",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fp_01_hdr",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "I3.02.01 — checklist pemasangan",
+        "info": "Ruangan: I3.02.01 (Umum Fakultas, FISIPOL) — 2 AC + 2 Lampu + Proyektor\nPort TCP AC: keduanya=5201, AC1=5301, AC2=5401\nPort TCP Proyektor: 5101\nLampu (WS501/WS502, gateway eksternal, bukan Node-RED): lihat backend TARGETS.lamp/lamp1/lamp2 untuk I3.02.01\n(semua port di atas sudah didaftarkan di backend/controllers/DeviceController.js TARGETS)\n\nTODO sebelum online:\n1. Isi MAC & IP Broadlink RM4 Pro AC 1 & AC 2 ruangan ini (2 config node terpisah, cari \"REPLACE_MAC_RM4PRO_I3.02.01_UNIT1/2\")\n2. Isi IP:port ATEN SN3001P proyektor ruangan ini di node \"TCP ke ATEN SN3001P (ON/OFF)\"\n3. Isi command RS232 ON/OFF proyektor sesuai manual/merek proyektor yang terpasang (belum diketahui saat flow ini dibuat)\n4. Kode IR AC (AC1 & AC2) memakai kode hasil learning Psikologi Q1.01.02 (asumsi unit AC & remote sama persis) — pakai node \"Discover\"/\"learn\" di bawah tiap unit bila unit itu ternyata berbeda\n5. Lampu 1 & Lampu 2 dikendalikan lewat gateway WS501/WS502 eksternal (sama seperti Psikologi) — tidak perlu flow Node-RED, cukup pastikan gateway sudah dikonfigurasi untuk port yang didaftarkan di backend",
+        "x": 400,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1rmdev",
+        "type": "rmdevice",
+        "folder": "",
+        "mac": "REPLACE_MAC_RM4PRO_I3.02.01_UNIT1",
+        "host": "REPLACE_IP_RM4PRO_I3.02.01_UNIT1",
+        "devType": "520b"
+    },
+    {
+        "id": "fp_01_ac1Cmt",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "AC 1 I3.02.01 — RM4 Pro (IR)",
+        "info": "",
+        "x": 380,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1SendOn",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "AC 1 I3.02.01 ON (24°C)",
+        "func": "// Kode IR sama seperti Psikologi Q1.01.02 (dipakai ulang untuk AC 1 I3.02.01; preset 24°C = default ON).\n// Ganti dengan hasil learning sendiri (pakai node Discover/learn di bawah) bila unit ini beda merek/model.\nvar data = [38,0,200,0,193,237,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,17,18,18,17,18,17,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,17,17,17,19,17,17,18,18,17,52,16,19,17,18,17,18,17,19,16,18,18,18,17,17,18,18,17,18,17,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,18,17,17,18,18,18,16,19,17,52,17,17,18,52,17,18,17,51,18,52,17,18,17,18,17,19,16,18,17,19,17,17,18,18,17,18,17,52,17,18,17,18,17,19,17,52,16,18,18,52,17,17,17,19,17,52,16,19,17,52,17,18,17,18,17,52,18,17,17,52,17,52,18,51,17,52,17,18,18,51,17,18,17,52,18,51,17,236,17,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload = { \"action\": \"send\", \"data\": data, \"repeat\": 2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 140,
+        "wires": [
+            [
+                "fp_01_ac1RmOn"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1SendOff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "AC 1 I3.02.01 OFF",
+        "func": "// Kode IR sama seperti Psikologi Q1.01.02 (dipakai ulang untuk AC 1 I3.02.01).\nvar data = [38,0,200,0,194,236,18,18,17,19,16,18,18,18,16,18,18,18,16,19,16,19,17,18,16,20,16,18,17,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,17,19,16,18,18,18,16,19,17,18,17,18,17,18,17,18,17,52,18,18,16,18,18,18,17,19,16,18,18,18,15,19,18,18,16,19,17,18,17,18,17,18,17,18,17,19,17,18,17,18,17,19,16,18,17,19,16,18,17,19,16,19,16,19,16,19,17,18,18,18,16,19,17,18,16,19,16,53,17,18,17,52,17,52,17,19,16,18,17,19,16,18,18,18,16,19,17,18,16,19,17,52,16,20,16,18,17,19,16,53,16,19,16,53,16,18,18,18,17,52,16,19,17,52,17,19,16,18,16,53,18,18,16,52,17,52,18,18,16,53,16,19,17,52,16,19,17,52,17,52,16,236,18,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload = { \"action\": \"send\", \"data\": data, \"repeat\": 2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 180,
+        "wires": [
+            [
+                "fp_01_ac1RmOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1RmOn",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 1000,
+        "y": 140,
+        "wires": [
+            [
+                "fp_01_ac1DbgOn"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1RmOff",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 1000,
+        "y": 180,
+        "wires": [
+            [
+                "fp_01_ac1DbgOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1DbgOn",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "AC1_ON_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1DbgOff",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "AC1_OFF_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1Inj0",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 1 I3.02.01 24°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 240,
+        "wires": [
+            [
+                "fp_01_ac1Fn0"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Fn0",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,193,237,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,17,18,18,17,18,17,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,17,17,17,19,17,17,18,18,17,52,16,19,17,18,17,18,17,19,16,18,18,18,17,17,18,18,17,18,17,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,18,17,17,18,18,18,16,19,17,52,17,17,18,52,17,18,17,51,18,52,17,18,17,18,17,19,16,18,17,19,17,17,18,18,17,18,17,52,17,18,17,18,17,19,17,52,16,18,18,52,17,17,17,19,17,52,16,19,17,52,17,18,17,18,17,52,18,17,17,52,17,52,18,51,17,52,17,18,18,51,17,18,17,52,18,51,17,236,17,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 240,
+        "wires": [
+            [
+                "fp_01_ac1Rm0"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Rm0",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 240,
+        "wires": [
+            [
+                "fp_01_ac1Dbg0"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Dbg0",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "24°C_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1Inj1",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 1 I3.02.01 22°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 280,
+        "wires": [
+            [
+                "fp_01_ac1Fn1"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Fn1",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,195,236,17,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,19,15,19,18,18,16,18,18,18,16,19,17,18,17,19,16,18,18,18,16,19,16,19,16,19,17,18,16,19,17,19,16,18,17,19,16,19,17,18,16,53,16,19,17,18,17,19,15,19,17,19,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,19,15,19,17,19,16,19,16,19,17,18,17,18,17,18,16,53,16,20,16,52,17,19,15,53,17,52,16,19,17,18,17,19,16,18,17,19,17,18,16,19,17,19,15,54,16,18,17,53,16,53,15,19,18,18,16,52,17,19,16,18,18,52,17,18,16,53,16,19,16,19,17,51,17,19,15,54,17,52,17,18,16,53,16,19,17,52,16,20,16,52,17,52,16,237,15,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 280,
+        "wires": [
+            [
+                "fp_01_ac1Rm1"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Rm1",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 280,
+        "wires": [
+            [
+                "fp_01_ac1Dbg1"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Dbg1",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "22°C_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1Inj2",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 1 I3.02.01 20°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 320,
+        "wires": [
+            [
+                "fp_01_ac1Fn2"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Fn2",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,194,236,17,18,17,18,17,19,16,18,17,19,17,17,18,18,17,19,16,18,17,19,16,18,18,18,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,17,18,18,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,52,17,19,17,18,17,18,17,18,17,18,17,19,16,18,18,18,16,18,18,18,17,18,17,18,18,18,15,19,18,18,16,19,17,18,16,19,17,18,16,19,17,19,16,18,17,19,16,18,18,18,16,19,17,18,16,53,17,18,17,52,16,19,17,52,17,52,16,19,16,19,17,19,16,18,18,18,16,19,17,18,16,19,17,52,17,17,18,18,17,52,16,19,17,18,17,53,16,18,16,20,16,52,17,18,17,53,16,18,18,18,16,52,17,19,17,52,16,53,16,52,17,19,16,18,18,51,18,18,16,52,17,52,17,237,16,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 320,
+        "wires": [
+            [
+                "fp_01_ac1Rm2"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Rm2",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 320,
+        "wires": [
+            [
+                "fp_01_ac1Dbg2"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Dbg2",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "20°C_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1Inj3",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 1 I3.02.01 18°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 360,
+        "wires": [
+            [
+                "fp_01_ac1Fn3"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Fn3",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,194,237,17,18,17,18,17,18,17,19,16,18,16,20,16,18,18,18,17,18,16,19,17,19,16,18,18,18,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,51,18,18,16,19,17,18,18,17,17,18,17,19,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,19,17,18,16,19,17,18,16,20,16,18,18,18,16,18,18,18,16,19,17,18,17,19,16,18,18,51,18,18,16,52,18,18,16,53,15,53,17,19,17,18,17,18,17,18,17,18,17,19,16,18,18,18,16,53,16,19,17,52,17,18,16,19,17,19,16,52,16,19,17,19,16,52,17,19,16,53,16,18,18,18,15,54,16,19,17,52,16,53,16,19,17,18,16,19,17,52,17,18,17,52,17,52,17,236,16,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 360,
+        "wires": [
+            [
+                "fp_01_ac1Rm3"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Rm3",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 360,
+        "wires": [
+            [
+                "fp_01_ac1Dbg3"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Dbg3",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "18°C_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1Inj4",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 1 I3.02.01 16°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 400,
+        "wires": [
+            [
+                "fp_01_ac1Fn4"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Fn4",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,194,237,16,19,16,20,15,20,16,19,16,18,18,18,16,19,17,18,16,19,17,18,17,19,16,19,16,19,16,19,17,18,17,18,16,19,17,18,16,21,15,18,18,18,16,19,17,18,17,19,16,18,17,19,15,19,17,19,16,19,17,52,16,19,17,18,16,20,16,19,15,20,16,19,16,19,17,18,17,19,16,20,15,18,18,19,15,18,17,19,16,20,15,19,17,19,16,18,18,18,16,20,16,19,15,20,17,17,17,18,16,20,16,19,16,19,17,53,14,21,15,53,16,19,17,52,17,53,15,20,15,20,16,18,16,20,15,20,17,18,16,20,15,19,16,54,15,19,17,18,17,18,18,18,15,20,16,54,14,19,17,19,16,53,15,21,16,53,15,19,17,18,16,53,15,21,16,53,16,53,14,54,16,53,16,52,17,19,15,21,16,53,15,53,15,238,15,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 400,
+        "wires": [
+            [
+                "fp_01_ac1Rm4"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Rm4",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 400,
+        "wires": [
+            [
+                "fp_01_ac1Dbg4"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Dbg4",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "16°C_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1LearnCmt",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "Utilitas: learn ulang IR AC 1 I3.02.01 (opsional)",
+        "info": "",
+        "x": 380,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1DiscInj",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 500,
+        "wires": [
+            [
+                "fp_01_ac1Discover"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1Discover",
+        "type": "Discover",
+        "z": "fp_01_tab",
+        "name": "",
+        "x": 620,
+        "y": 500,
+        "wires": [
+            [
+                "fp_01_ac1DiscDbg"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1DiscDbg",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "discover_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac1LearnInj",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 540,
+        "wires": [
+            [
+                "fp_01_ac1LearnRm"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1LearnRm",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 1 I3.02.01",
+        "device": "fp_01_ac1rmdev",
+        "action": "learn",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 620,
+        "y": 540,
+        "wires": [
+            [
+                "fp_01_ac1LearnTpl"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1LearnTpl",
+        "type": "template",
+        "z": "fp_01_tab",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{payload.data}}",
+        "output": "str",
+        "x": 820,
+        "y": 540,
+        "wires": [
+            [
+                "fp_01_ac1LearnDbg"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac1LearnDbg",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "learned_ir_ac1_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2rmdev",
+        "type": "rmdevice",
+        "folder": "",
+        "mac": "REPLACE_MAC_RM4PRO_I3.02.01_UNIT2",
+        "host": "REPLACE_IP_RM4PRO_I3.02.01_UNIT2",
+        "devType": "520b"
+    },
+    {
+        "id": "fp_01_ac2Cmt",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "AC 2 I3.02.01 — RM4 Pro (IR)",
+        "info": "",
+        "x": 380,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2SendOn",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "AC 2 I3.02.01 ON (24°C)",
+        "func": "// Kode IR sama seperti Psikologi Q1.01.02 (dipakai ulang untuk AC 2 I3.02.01; preset 24°C = default ON).\n// Ganti dengan hasil learning sendiri (pakai node Discover/learn di bawah) bila unit ini beda merek/model.\nvar data = [38,0,200,0,193,237,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,17,18,18,17,18,17,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,17,17,17,19,17,17,18,18,17,52,16,19,17,18,17,18,17,19,16,18,18,18,17,17,18,18,17,18,17,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,18,17,17,18,18,18,16,19,17,52,17,17,18,52,17,18,17,51,18,52,17,18,17,18,17,19,16,18,17,19,17,17,18,18,17,18,17,52,17,18,17,18,17,19,17,52,16,18,18,52,17,17,17,19,17,52,16,19,17,52,17,18,17,18,17,52,18,17,17,52,17,52,18,51,17,52,17,18,18,51,17,18,17,52,18,51,17,236,17,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload = { \"action\": \"send\", \"data\": data, \"repeat\": 2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 560,
+        "wires": [
+            [
+                "fp_01_ac2RmOn"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2SendOff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "AC 2 I3.02.01 OFF",
+        "func": "// Kode IR sama seperti Psikologi Q1.01.02 (dipakai ulang untuk AC 2 I3.02.01).\nvar data = [38,0,200,0,194,236,18,18,17,19,16,18,18,18,16,18,18,18,16,19,16,19,17,18,16,20,16,18,17,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,17,19,16,18,18,18,16,19,17,18,17,18,17,18,17,18,17,52,18,18,16,18,18,18,17,19,16,18,18,18,15,19,18,18,16,19,17,18,17,18,17,18,17,18,17,19,17,18,17,18,17,19,16,18,17,19,16,18,17,19,16,19,16,19,16,19,17,18,18,18,16,19,17,18,16,19,16,53,17,18,17,52,17,52,17,19,16,18,17,19,16,18,18,18,16,19,17,18,16,19,17,52,16,20,16,18,17,19,16,53,16,19,16,53,16,18,18,18,17,52,16,19,17,52,17,19,16,18,16,53,18,18,16,52,17,52,18,18,16,53,16,19,17,52,16,19,17,52,17,52,16,236,18,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload = { \"action\": \"send\", \"data\": data, \"repeat\": 2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 600,
+        "wires": [
+            [
+                "fp_01_ac2RmOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2RmOn",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 1000,
+        "y": 560,
+        "wires": [
+            [
+                "fp_01_ac2DbgOn"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2RmOff",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 1000,
+        "y": 600,
+        "wires": [
+            [
+                "fp_01_ac2DbgOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2DbgOn",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "AC2_ON_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2DbgOff",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "AC2_OFF_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2Inj0",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 2 I3.02.01 24°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 660,
+        "wires": [
+            [
+                "fp_01_ac2Fn0"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Fn0",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,193,237,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,17,18,18,17,18,17,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,17,17,17,19,17,17,18,18,17,52,16,19,17,18,17,18,17,19,16,18,18,18,17,17,18,18,17,18,17,18,18,18,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,18,17,17,18,18,18,16,19,17,52,17,17,18,52,17,18,17,51,18,52,17,18,17,18,17,19,16,18,17,19,17,17,18,18,17,18,17,52,17,18,17,18,17,19,17,52,16,18,18,52,17,17,17,19,17,52,16,19,17,52,17,18,17,18,17,52,18,17,17,52,17,52,18,51,17,52,17,18,18,51,17,18,17,52,18,51,17,236,17,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 660,
+        "wires": [
+            [
+                "fp_01_ac2Rm0"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Rm0",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 660,
+        "wires": [
+            [
+                "fp_01_ac2Dbg0"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Dbg0",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "24°C_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2Inj1",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 2 I3.02.01 22°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 700,
+        "wires": [
+            [
+                "fp_01_ac2Fn1"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Fn1",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,195,236,17,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,19,15,19,18,18,16,18,18,18,16,19,17,18,17,19,16,18,18,18,16,19,16,19,16,19,17,18,16,19,17,19,16,18,17,19,16,19,17,18,16,53,16,19,17,18,17,19,15,19,17,19,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,19,17,18,16,19,17,18,17,19,15,19,17,19,16,19,16,19,17,18,17,18,17,18,16,53,16,20,16,52,17,19,15,53,17,52,16,19,17,18,17,19,16,18,17,19,17,18,16,19,17,19,15,54,16,18,17,53,16,53,15,19,18,18,16,52,17,19,16,18,18,52,17,18,16,53,16,19,16,19,17,51,17,19,15,54,17,52,17,18,16,53,16,19,17,52,16,20,16,52,17,52,16,237,15,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 700,
+        "wires": [
+            [
+                "fp_01_ac2Rm1"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Rm1",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 700,
+        "wires": [
+            [
+                "fp_01_ac2Dbg1"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Dbg1",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "22°C_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2Inj2",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 2 I3.02.01 20°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 740,
+        "wires": [
+            [
+                "fp_01_ac2Fn2"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Fn2",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,194,236,17,18,17,18,17,19,16,18,17,19,17,17,18,18,17,19,16,18,17,19,16,18,18,18,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,17,18,18,17,18,17,18,17,19,16,18,17,19,16,18,18,18,16,52,17,19,17,18,17,18,17,18,17,18,17,19,16,18,18,18,16,18,18,18,17,18,17,18,18,18,15,19,18,18,16,19,17,18,16,19,17,18,16,19,17,19,16,18,17,19,16,18,18,18,16,19,17,18,16,53,17,18,17,52,16,19,17,52,17,52,16,19,16,19,17,19,16,18,18,18,16,19,17,18,16,19,17,52,17,17,18,18,17,52,16,19,17,18,17,53,16,18,16,20,16,52,17,18,17,53,16,18,18,18,16,52,17,19,17,52,16,53,16,52,17,19,16,18,18,51,18,18,16,52,17,52,17,237,16,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 740,
+        "wires": [
+            [
+                "fp_01_ac2Rm2"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Rm2",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 740,
+        "wires": [
+            [
+                "fp_01_ac2Dbg2"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Dbg2",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "20°C_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2Inj3",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 2 I3.02.01 18°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 780,
+        "wires": [
+            [
+                "fp_01_ac2Fn3"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Fn3",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,194,237,17,18,17,18,17,18,17,19,16,18,16,20,16,18,18,18,17,18,16,19,17,19,16,18,18,18,16,18,18,18,16,19,17,18,17,18,17,18,18,17,17,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,18,18,51,18,18,16,19,17,18,18,17,17,18,17,19,16,19,17,18,16,19,17,18,17,18,17,19,16,18,17,19,16,19,17,18,16,19,17,18,16,20,16,18,18,18,16,18,18,18,16,19,17,18,17,19,16,18,18,51,18,18,16,52,18,18,16,53,15,53,17,19,17,18,17,18,17,18,17,18,17,19,16,18,18,18,16,53,16,19,17,52,17,18,16,19,17,19,16,52,16,19,17,19,16,52,17,19,16,53,16,18,18,18,15,54,16,19,17,52,16,53,16,19,17,18,16,19,17,52,17,18,17,52,17,52,17,236,16,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 780,
+        "wires": [
+            [
+                "fp_01_ac2Rm3"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Rm3",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 780,
+        "wires": [
+            [
+                "fp_01_ac2Dbg3"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Dbg3",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "18°C_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2Inj4",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "Test AC 2 I3.02.01 16°C",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 820,
+        "wires": [
+            [
+                "fp_01_ac2Fn4"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Fn4",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "",
+        "func": "//Insert learned data object here\nvar data = [38,0,200,0,194,237,16,19,16,20,15,20,16,19,16,18,18,18,16,19,17,18,16,19,17,18,17,19,16,19,16,19,16,19,17,18,17,18,16,19,17,18,16,21,15,18,18,18,16,19,17,18,17,19,16,18,17,19,15,19,17,19,16,19,17,52,16,19,17,18,16,20,16,19,15,20,16,19,16,19,17,18,17,19,16,20,15,18,18,19,15,18,17,19,16,20,15,19,17,19,16,18,18,18,16,20,16,19,15,20,17,17,17,18,16,20,16,19,16,19,17,53,14,21,15,53,16,19,17,52,17,53,15,20,15,20,16,18,16,20,15,20,17,18,16,20,15,19,16,54,15,19,17,18,17,18,18,18,15,20,16,54,14,19,17,19,16,53,15,21,16,53,15,19,17,18,16,53,15,21,16,53,16,53,14,54,16,53,16,52,17,19,15,21,16,53,15,53,15,238,15,0,13,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];\n\nmsg.payload={ \"action\":\"send\", \"data\":data, \"repeat\":2 };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 820,
+        "wires": [
+            [
+                "fp_01_ac2Rm4"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Rm4",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "_msg_",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 820,
+        "y": 820,
+        "wires": [
+            [
+                "fp_01_ac2Dbg4"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Dbg4",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "16°C_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2LearnCmt",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "Utilitas: learn ulang IR AC 2 I3.02.01 (opsional)",
+        "info": "",
+        "x": 380,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2DiscInj",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 920,
+        "wires": [
+            [
+                "fp_01_ac2Discover"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2Discover",
+        "type": "Discover",
+        "z": "fp_01_tab",
+        "name": "",
+        "x": 620,
+        "y": 920,
+        "wires": [
+            [
+                "fp_01_ac2DiscDbg"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2DiscDbg",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "discover_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac2LearnInj",
+        "type": "inject",
+        "z": "fp_01_tab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 400,
+        "y": 960,
+        "wires": [
+            [
+                "fp_01_ac2LearnRm"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2LearnRm",
+        "type": "RM",
+        "z": "fp_01_tab",
+        "name": "RM4PRO AC 2 I3.02.01",
+        "device": "fp_01_ac2rmdev",
+        "action": "learn",
+        "remote": "",
+        "button": "",
+        "fix": 1,
+        "RFSweep": "false",
+        "x": 620,
+        "y": 960,
+        "wires": [
+            [
+                "fp_01_ac2LearnTpl"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2LearnTpl",
+        "type": "template",
+        "z": "fp_01_tab",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{{payload.data}}",
+        "output": "str",
+        "x": 820,
+        "y": 960,
+        "wires": [
+            [
+                "fp_01_ac2LearnDbg"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac2LearnDbg",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "learned_ir_ac2_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "fp_01_acListenersCmt",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "Kanal kontrol AC I3.02.01 (dari backend TARGETS.ac / .ac1 / .ac2)",
+        "info": "",
+        "x": 380,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "fp_01_ac_both_tcpin",
+        "type": "tcp in",
+        "z": "fp_01_tab",
+        "name": "TCP AC BOTH I3.02.01 (:5201)",
+        "server": "server",
+        "host": "",
+        "port": "5201",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 400,
+        "y": 1020,
+        "wires": [
+            [
+                "fp_01_ac_both_json"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_both_json",
+        "type": "json",
+        "z": "fp_01_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 560,
+        "y": 1020,
+        "wires": [
+            [
+                "fp_01_ac_both_onoff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_both_onoff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "ON/OFF AC_both_I3.02.01",
+        "func": "let state = msg.payload.state;\nif (typeof state === \"string\") { state = state.toLowerCase(); }\n\nif (state === \"on\") {\n    msg.payload = Date.now(); msg.source = \"web_ac\"; msg.ac_state = \"on\";\n    return [msg, null];\n}\nif (state === \"off\") {\n    msg.payload = Date.now(); msg.source = \"web_ac\"; msg.ac_state = \"off\";\n    return [null, msg];\n}\nnode.warn(\"Command AC tidak valid: \" + JSON.stringify(msg.payload));\nreturn null;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 1020,
+        "wires": [
+            [
+                "fp_01_ac1SendOn",
+                "fp_01_ac2SendOn"
+            ],
+            [
+                "fp_01_ac1SendOff",
+                "fp_01_ac2SendOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_1_tcpin",
+        "type": "tcp in",
+        "z": "fp_01_tab",
+        "name": "TCP AC 1 I3.02.01 (:5301)",
+        "server": "server",
+        "host": "",
+        "port": "5301",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 400,
+        "y": 1060,
+        "wires": [
+            [
+                "fp_01_ac_1_json"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_1_json",
+        "type": "json",
+        "z": "fp_01_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 560,
+        "y": 1060,
+        "wires": [
+            [
+                "fp_01_ac_1_onoff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_1_onoff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "ON/OFF AC_1_I3.02.01",
+        "func": "let state = msg.payload.state;\nif (typeof state === \"string\") { state = state.toLowerCase(); }\n\nif (state === \"on\") {\n    msg.payload = Date.now(); msg.source = \"web_ac\"; msg.ac_state = \"on\";\n    return [msg, null];\n}\nif (state === \"off\") {\n    msg.payload = Date.now(); msg.source = \"web_ac\"; msg.ac_state = \"off\";\n    return [null, msg];\n}\nnode.warn(\"Command AC tidak valid: \" + JSON.stringify(msg.payload));\nreturn null;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 1060,
+        "wires": [
+            [
+                "fp_01_ac1SendOn"
+            ],
+            [
+                "fp_01_ac1SendOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_2_tcpin",
+        "type": "tcp in",
+        "z": "fp_01_tab",
+        "name": "TCP AC 2 I3.02.01 (:5401)",
+        "server": "server",
+        "host": "",
+        "port": "5401",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 400,
+        "y": 1100,
+        "wires": [
+            [
+                "fp_01_ac_2_json"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_2_json",
+        "type": "json",
+        "z": "fp_01_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 560,
+        "y": 1100,
+        "wires": [
+            [
+                "fp_01_ac_2_onoff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_ac_2_onoff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "ON/OFF AC_2_I3.02.01",
+        "func": "let state = msg.payload.state;\nif (typeof state === \"string\") { state = state.toLowerCase(); }\n\nif (state === \"on\") {\n    msg.payload = Date.now(); msg.source = \"web_ac\"; msg.ac_state = \"on\";\n    return [msg, null];\n}\nif (state === \"off\") {\n    msg.payload = Date.now(); msg.source = \"web_ac\"; msg.ac_state = \"off\";\n    return [null, msg];\n}\nnode.warn(\"Command AC tidak valid: \" + JSON.stringify(msg.payload));\nreturn null;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 1100,
+        "wires": [
+            [
+                "fp_01_ac2SendOn"
+            ],
+            [
+                "fp_01_ac2SendOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projCmt",
+        "type": "comment",
+        "z": "fp_01_tab",
+        "name": "Proyektor I3.02.01 — ATEN SN3001P (RS232-over-TCP) — BELUM diisi command",
+        "info": "ATEN SN3001P adalah device server RS232-ke-TCP, bukan proyektor itu sendiri.\nCommand ON/OFF yang benar tergantung merek/model proyektor yang terpasang\n(lihat manual RS232 proyektornya). Isi command di node function di bawah,\ndan IP:port ATEN SN3001P di node \"tcp request\".",
+        "x": 400,
+        "y": 1160,
+        "wires": []
+    },
+    {
+        "id": "fp_01_projTcpIn",
+        "type": "tcp in",
+        "z": "fp_01_tab",
+        "name": "TCP Proyektor I3.02.01 (:5101)",
+        "server": "server",
+        "host": "",
+        "port": "5101",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 420,
+        "y": 1220,
+        "wires": [
+            [
+                "fp_01_projJson"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projJson",
+        "type": "json",
+        "z": "fp_01_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 640,
+        "y": 1220,
+        "wires": [
+            [
+                "fp_01_projOnOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projOnOff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "ON/OFF proyektor_I3.02.01",
+        "func": "let state = msg.payload.state;\n\nif (typeof state === \"string\") {\n    state = state.toLowerCase();\n}\n\nif (state === \"on\") {\n    msg.source = \"web_projector\";\n    msg.projector_state = \"on\";\n    return [msg, null];\n}\n\nif (state === \"off\") {\n    msg.source = \"web_projector\";\n    msg.projector_state = \"off\";\n    return [null, msg];\n}\n\nnode.warn(\"Command proyektor tidak valid: \" + JSON.stringify(msg.payload));\nreturn null;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 1220,
+        "wires": [
+            [
+                "fp_01_projSendOn"
+            ],
+            [
+                "fp_01_projSendOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projSendOn",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "TODO: command RS232 ON I3.02.01",
+        "func": "// TODO: isi command RS232 ON proyektor sesuai manual (belum diketahui saat flow ini dibuat).\n// Contoh format umum (ganti sesuai merek proyektor):\n//   ASCII : msg.payload = \"PWR ON\\r\";\n//   HEX   : msg.payload = Buffer.from([0x02, 0x50, 0x4F, 0x4E, 0x03]);\nmsg.payload = \"\"; // <-- GANTI dengan command RS232 ON yang sebenarnya\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1120,
+        "y": 1200,
+        "wires": [
+            [
+                "fp_01_projTcpOn"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projSendOff",
+        "type": "function",
+        "z": "fp_01_tab",
+        "name": "TODO: command RS232 OFF I3.02.01",
+        "func": "// TODO: isi command RS232 OFF proyektor sesuai manual (belum diketahui saat flow ini dibuat).\nmsg.payload = \"\"; // <-- GANTI dengan command RS232 OFF yang sebenarnya\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1120,
+        "y": 1240,
+        "wires": [
+            [
+                "fp_01_projTcpOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projTcpOn",
+        "type": "tcp request",
+        "z": "fp_01_tab",
+        "name": "TCP ke ATEN SN3001P I3.02.01 (ON)",
+        "server": "REPLACE_IP_ATEN_I3.02.01",
+        "port": "REPLACE_PORT_ATEN",
+        "out": "time",
+        "ret": "buffer",
+        "splitc": "1",
+        "tls": "",
+        "x": 1400,
+        "y": 1200,
+        "wires": [
+            [
+                "fp_01_projDbgOn"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projTcpOff",
+        "type": "tcp request",
+        "z": "fp_01_tab",
+        "name": "TCP ke ATEN SN3001P I3.02.01 (OFF)",
+        "server": "REPLACE_IP_ATEN_I3.02.01",
+        "port": "REPLACE_PORT_ATEN",
+        "out": "time",
+        "ret": "buffer",
+        "splitc": "1",
+        "tls": "",
+        "x": 1400,
+        "y": 1240,
+        "wires": [
+            [
+                "fp_01_projDbgOff"
+            ]
+        ]
+    },
+    {
+        "id": "fp_01_projDbgOn",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "Proyektor_ON_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1650,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "fp_01_projDbgOff",
+        "type": "debug",
+        "z": "fp_01_tab",
+        "name": "Proyektor_OFF_I3.02.01",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1650,
+        "y": 1240,
+        "wires": []
+    }
+]

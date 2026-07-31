@@ -1,0 +1,10 @@
+[
+    {
+        "id": "fpsharedglobalcfg",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-broadlink-control": "2.1.6"
+        }
+    }
+]

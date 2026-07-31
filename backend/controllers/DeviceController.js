@@ -25,6 +25,10 @@ const FIKK_PROJECTOR_IR = {
 };
 
 const TARGETS = {
+  // "lamp" = kedua unit lampu ruangan sekaligus. "lamp1"/"lamp2" = unit
+  // individual (dipakai ruangan dengan >1 unit, mis. FISIPOL — 2 relay
+  // WS501/WS502 per ruangan). Fakultas dengan 1 unit lampu (mis. Psikologi)
+  // cukup pakai "lamp".
   lamp: {
     label: "WS501/WS502 Lamp",
     host: LAMP_GATEWAY_HOST,
@@ -33,7 +37,35 @@ const TARGETS = {
       q10103: 5103,
       q10104: 5104,
       q10109: 5109,
-      q10111: 5111
+      q10111: 5111,
+      // FISIPOL — Umum Fakultas (kedua lampu sekaligus)
+      i30201: 6001,
+      i30202: 6002,
+      i30203: 6003,
+      i30204: 6004,
+      i30205: 6005
+    }
+  },
+  lamp1: {
+    label: "WS501/WS502 Lamp 1",
+    host: LAMP_GATEWAY_HOST,
+    ports: {
+      i30201: 6101,
+      i30202: 6102,
+      i30203: 6103,
+      i30204: 6104,
+      i30205: 6105
+    }
+  },
+  lamp2: {
+    label: "WS501/WS502 Lamp 2",
+    host: LAMP_GATEWAY_HOST,
+    ports: {
+      i30201: 6201,
+      i30202: 6202,
+      i30203: 6203,
+      i30204: 6204,
+      i30205: 6205
     }
   },
   projector: {
@@ -44,9 +76,17 @@ const TARGETS = {
       q10103: 5103,
       q10104: 5104,
       q10109: 5109,
-      q10111: 5111
+      q10111: 5111,
+      // FISIPOL — Umum Fakultas (proyektor via ATEN SN3001P, lihat backend/nodered/I3.02.0X-COLLECTOR.json)
+      i30201: 5101,
+      i30202: 5102,
+      i30203: 5103,
+      i30204: 5104,
+      i30205: 5105
     }
   },
+  // "ac" = kedua unit AC ruangan sekaligus. "ac1"/"ac2" = unit individual
+  // (masing-masing RM4 Pro fisik terpisah — dipakai FISIPOL, 2 AC per ruangan).
   ac: {
     label: "AC",
     host: MINI_PC_NODE_RED_HOST,
@@ -55,7 +95,35 @@ const TARGETS = {
       q10103: 5203,
       q10104: 5204,
       q10109: 5209,
-      q10111: 5211
+      q10111: 5211,
+      // FISIPOL — Umum Fakultas (kedua AC sekaligus, lihat backend/nodered/I3.02.0X-COLLECTOR.json)
+      i30201: 5201,
+      i30202: 5202,
+      i30203: 5203,
+      i30204: 5204,
+      i30205: 5205
+    }
+  },
+  ac1: {
+    label: "AC 1",
+    host: MINI_PC_NODE_RED_HOST,
+    ports: {
+      i30201: 5301,
+      i30202: 5302,
+      i30203: 5303,
+      i30204: 5304,
+      i30205: 5305
+    }
+  },
+  ac2: {
+    label: "AC 2",
+    host: MINI_PC_NODE_RED_HOST,
+    ports: {
+      i30201: 5401,
+      i30202: 5402,
+      i30203: 5403,
+      i30204: 5404,
+      i30205: 5405
     }
   }
 };
@@ -152,16 +220,52 @@ function normalizeClassKey(classCode) {
   return String(classCode || '').toLowerCase().replace(/\./g, '');
 }
 
+// Sub-channel target types (mis. "ac1", "lampu2") dipertahankan apa adanya —
+// dipakai untuk ruangan yang punya lebih dari satu unit AC/lampu (mis. FISIPOL).
+// Target dasar tanpa suffix ("ac", "lamp") berarti "kedua unit sekaligus".
+const UNIT_TARGET_TYPES = new Set(['ac1', 'ac2', 'lamp1', 'lamp2']);
+
 function normalizeTargetType(deviceType) {
-  const raw = String(deviceType || '').toLowerCase();
+  const raw = String(deviceType || '').toLowerCase().trim();
+  if (UNIT_TARGET_TYPES.has(raw)) return raw;
   if (raw.includes('ac')) return 'ac';
   if (raw.includes('projector') || raw.includes('proyektor')) return 'projector';
   if (raw.includes('lamp') || raw.includes('light') || raw.includes('cahaya')) return 'lamp';
   return raw;
 }
 
+// Target dasar dari sub-channel: "ac1"/"ac2" -> "ac", "lamp1"/"lamp2" -> "lamp".
+function baseTargetType(targetType) {
+  return String(targetType || '').replace(/[12]$/, '');
+}
+
+// Indeks unit fisik perangkat (1 atau 2) dari akhiran device_eui, mis.
+// "AC-I30201-001" -> 1, "AC-I30201-002" -> 2. Default 1 bila tidak ada akhiran
+// bernomor (ruangan dengan satu unit saja, mis. Psikologi/fakultas lain).
+function deviceUnitIndex(device) {
+  const match = String(device.device_eui || '').match(/-0*(\d+)$/);
+  if (!match) return 1;
+  const n = parseInt(match[1], 10);
+  return n === 2 ? 2 : 1;
+}
+
+// Menentukan target type efektif untuk SATU device spesifik (dipakai oleh
+// kontrol per-device/`controlViaNodeRed`): bila ruangan ini punya TARGETS
+// per-unit terdaftar (mis. TARGETS.ac1/TARGETS.ac2 untuk FISIPOL), arahkan ke
+// unit yang sesuai; bila tidak, pakai target dasar (perilaku lama, 1 unit).
+function resolveDeviceTargetType(device) {
+  const base = normalizeTargetType(device.device_type || device.type);
+  const unitType = `${base}${deviceUnitIndex(device)}`;
+  return TARGETS[unitType] ? unitType : base;
+}
+
 function deviceMatchesTargetType(device, targetType) {
-  return normalizeTargetType(device.device_type || device.type) === targetType;
+  const deviceBase = normalizeTargetType(device.device_type || device.type);
+  if (UNIT_TARGET_TYPES.has(targetType)) {
+    return deviceBase === baseTargetType(targetType) && deviceUnitIndex(device) === Number(targetType.slice(-1));
+  }
+  // Target dasar ("ac"/"lamp"/"projector") = cocok untuk SEMUA unit tipe itu.
+  return deviceBase === targetType;
 }
 
 class DeviceController {
@@ -449,16 +553,10 @@ class DeviceController {
       const classCode = device.location || device.class_name || null;
       const classKey = classCode ? String(classCode).toLowerCase().replace(/\./g, '') : '';
 
-      // Normalize device type
-      let targetType = 'lamp';
-      const devType = String(device.device_type || '').toLowerCase();
-      if (devType.includes('ac')) {
-        targetType = 'ac';
-      } else if (devType.includes('projector') || devType.includes('proyektor')) {
-        targetType = 'projector';
-      } else if (devType.includes('lamp') || devType.includes('cahaya')) {
-        targetType = 'lamp';
-      }
+      // Device individual (mis. AC 1 vs AC 2 di ruangan dengan 2 unit) diarahkan
+      // ke target per-unit-nya sendiri bila ruangan itu punya TARGETS terdaftar;
+      // ruangan dengan 1 unit saja (mis. Psikologi) tetap pakai target dasar.
+      const targetType = resolveDeviceTargetType(device);
 
       // Check if classroom is mapped in TARGETS for direct TCP control
       const target = TARGETS[targetType];
@@ -611,9 +709,13 @@ class DeviceController {
       const normalizedAction = String(finalAction).toLowerCase();
       const classKey = String(classCode).toLowerCase().replace(/\./g, '');
 
-      // Check if classroom is mapped in TARGETS for direct TCP control of all devices (lamp, projector, ac)
+      // Check if classroom is mapped in TARGETS for direct TCP control of all devices (lamp, projector, ac).
+      // Sub-channel targets (ac1/ac2/lamp1/lamp2) dilewati di sini — "ac"/"lamp"
+      // dasar sudah berarti "kedua unit sekaligus", jadi ikut fan-out per-unit
+      // hanya akan mengirim command duplikat/tumpang tindih ke hardware yang sama.
       const tcpPromises = [];
       for (const [targetKey, target] of Object.entries(TARGETS)) {
+        if (UNIT_TARGET_TYPES.has(targetKey)) continue;
         const resolved = resolveTcpTarget(target, classKey);
         if (resolved) {
           const tcpPayload = {
@@ -788,7 +890,7 @@ class DeviceController {
       if (!target) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid deviceType. Must be lamp, ac, or projector'
+          message: 'Invalid deviceType. Must be lamp, ac, projector, ac1, ac2, lamp1, or lamp2'
         });
       }
 
