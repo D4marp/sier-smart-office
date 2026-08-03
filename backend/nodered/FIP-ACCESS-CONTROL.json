@@ -1,0 +1,985 @@
+[
+    {
+        "id": "14712064f2909bd2",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "6a169725fb2dad36",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "14712064f2909bd2",
+        "name": "O2.02.10 Access",
+        "topic": "K1T342MFX",
+        "server": "88298105ec33d455",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "448b3a078a709c7c",
+                "d7852399bfa8d097"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "7a37e19d6230cb62",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "14712064f2909bd2",
+        "name": "O2.02.11 Access",
+        "topic": "K1T342MFX",
+        "server": "f4584034b7cbf42e",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 160,
+        "y": 220,
+        "wires": [
+            [
+                "e667e5ec271ed816"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "7da09b9cca5df1a6",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "14712064f2909bd2",
+        "name": "O2.02.12 Access",
+        "topic": "K1T342MFX",
+        "server": "15dfd4d66ce71135",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 160,
+        "y": 300,
+        "wires": [
+            [
+                "5d3ae90af71f0a9c"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "e1976e36524a8616",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "14712064f2909bd2",
+        "name": "O2.02.13 Access",
+        "topic": "K1T342MFX",
+        "server": "a8576c272ccf04f9",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 160,
+        "y": 380,
+        "wires": [
+            [
+                "e6b9a28481f91465"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "3f793eaa129a917c",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "14712064f2909bd2",
+        "name": "O2.02.14 Access",
+        "topic": "K1T342MFX",
+        "server": "19bc277ac3f003e3",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 160,
+        "y": 460,
+        "wires": [
+            [
+                "cf35fa23a5f8415a"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "0aa6cefd394ca121",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "",
+        "host": "192.168.1.150",
+        "port": "801",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 860,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "df3512f6f4104516",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "",
+        "host": "192.168.1.150",
+        "port": "802",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 860,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "0c06a4ebced6ed14",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "",
+        "host": "192.168.1.150",
+        "port": "803",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 860,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "87ad7b407f9cd21c",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "",
+        "host": "192.168.1.150",
+        "port": "804",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 860,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "1bf7d52aeedac621",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "",
+        "host": "192.168.1.150",
+        "port": "805",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 860,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "448b3a078a709c7c",
+        "type": "debug",
+        "z": "14712064f2909bd2",
+        "name": "debug 46",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "d7852399bfa8d097",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Major 5",
+        "property": "payload.major",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 420,
+        "y": 160,
+        "wires": [
+            [
+                "67fc633c51d54326"
+            ]
+        ]
+    },
+    {
+        "id": "67fc633c51d54326",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Minor 1",
+        "property": "payload.minor",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 560,
+        "y": 160,
+        "wires": [
+            [
+                "0aa6cefd394ca121",
+                "c95aed5f0fd402f4",
+                "O20210_accessAlertFn",
+                "O20210_doorTriggerFn"
+            ]
+        ]
+    },
+    {
+        "id": "c95aed5f0fd402f4",
+        "type": "link out",
+        "z": "14712064f2909bd2",
+        "name": "Minmoe Q1.01.02",
+        "mode": "link",
+        "links": [],
+        "x": 725,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "7e5e633ad679e77f",
+        "type": "debug",
+        "z": "14712064f2909bd2",
+        "name": "debug 49",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "e667e5ec271ed816",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Major 5",
+        "property": "payload.major",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 420,
+        "y": 240,
+        "wires": [
+            [
+                "8029d7c61774c527"
+            ]
+        ]
+    },
+    {
+        "id": "8029d7c61774c527",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Minor 1",
+        "property": "payload.minor",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 560,
+        "y": 240,
+        "wires": [
+            [
+                "664a64e3007f93ee",
+                "df3512f6f4104516",
+                "O20211_accessAlertFn",
+                "O20211_doorTriggerFn"
+            ]
+        ]
+    },
+    {
+        "id": "664a64e3007f93ee",
+        "type": "link out",
+        "z": "14712064f2909bd2",
+        "name": "Minmoe Q1.01.03",
+        "mode": "link",
+        "links": [],
+        "x": 725,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "5d3ae90af71f0a9c",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Major 5",
+        "property": "payload.major",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 420,
+        "y": 320,
+        "wires": [
+            [
+                "7f07553499872350"
+            ]
+        ]
+    },
+    {
+        "id": "7f07553499872350",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Minor 1",
+        "property": "payload.minor",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 560,
+        "y": 320,
+        "wires": [
+            [
+                "014cc32e2164c838",
+                "0c06a4ebced6ed14",
+                "O20212_accessAlertFn",
+                "O20212_doorTriggerFn"
+            ]
+        ]
+    },
+    {
+        "id": "014cc32e2164c838",
+        "type": "link out",
+        "z": "14712064f2909bd2",
+        "name": "Minmoe Q1.01.04",
+        "mode": "link",
+        "links": [],
+        "x": 725,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "e6b9a28481f91465",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Major 5",
+        "property": "payload.major",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 420,
+        "y": 400,
+        "wires": [
+            [
+                "0cce0a5b1298239e"
+            ]
+        ]
+    },
+    {
+        "id": "0cce0a5b1298239e",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Minor 1",
+        "property": "payload.minor",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 560,
+        "y": 400,
+        "wires": [
+            [
+                "900da536d3acfa72",
+                "87ad7b407f9cd21c",
+                "O20213_accessAlertFn",
+                "O20213_doorTriggerFn"
+            ]
+        ]
+    },
+    {
+        "id": "900da536d3acfa72",
+        "type": "link out",
+        "z": "14712064f2909bd2",
+        "name": "Minmoe Q1.01.11",
+        "mode": "link",
+        "links": [],
+        "x": 725,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "cf35fa23a5f8415a",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Major 5",
+        "property": "payload.major",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "5",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 420,
+        "y": 480,
+        "wires": [
+            [
+                "861caae0a421f91d"
+            ]
+        ]
+    },
+    {
+        "id": "861caae0a421f91d",
+        "type": "switch",
+        "z": "14712064f2909bd2",
+        "name": "Minor 1",
+        "property": "payload.minor",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 560,
+        "y": 480,
+        "wires": [
+            [
+                "90886a5ceb90a133",
+                "1bf7d52aeedac621",
+                "O20214_accessAlertFn",
+                "O20214_doorTriggerFn"
+            ]
+        ]
+    },
+    {
+        "id": "90886a5ceb90a133",
+        "type": "link out",
+        "z": "14712064f2909bd2",
+        "name": "Minmoe Q1.01.09",
+        "mode": "link",
+        "links": [],
+        "x": 725,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "217f1ee70aabe691",
+        "type": "debug",
+        "z": "14712064f2909bd2",
+        "name": "debug 50",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "3c9d49ce885cbe2f",
+        "type": "debug",
+        "z": "14712064f2909bd2",
+        "name": "debug 51",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "630d166374f9ef94",
+        "type": "debug",
+        "z": "14712064f2909bd2",
+        "name": "debug 52",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "88298105ec33d455",
+        "type": "AccessControl-config",
+        "host": "192.168.1.61",
+        "port": "80",
+        "name": "Access Controller",
+        "protocol": "http",
+        "deviceinfo": "{\"?xml\":\"\",\"DeviceInfo\":{\"deviceName\":\"Access Controller\",\"deviceID\":255,\"model\":\"DS-K1T342MFX\",\"serialNumber\":\"DS-K1T342MFX20250307V043800ENGK0876732\",\"macAddress\":\"88:DE:39:46:F5:58\",\"firmwareVersion\":\"V4.38.0\",\"firmwareReleasedDate\":\"build 250307\",\"encoderVersion\":\"V2.9\",\"encoderReleasedDate\":\"build 250117\",\"hardwareVersion\":\"V1.0.0\",\"deviceType\":\"ACS\",\"subDeviceType\":\"accessControlTerminal\",\"localZoneNum\":0,\"alarmOutNum\":0,\"electroLockNum\":1,\"RS485Num\":1,\"manufacturer\":\"hikvision\",\"OEMCode\":1,\"marketType\":1,\"dispalyNum\":1,\"bspVersion\":\"V1.6.1.751013 build 241114\",\"dspVersion\":\"V2.9 build 250117\",\"productionDate\":\"2025-11-05\"}}",
+        "authentication": "digest",
+        "debuglevel": "yes"
+    },
+    {
+        "id": "f4584034b7cbf42e",
+        "type": "AccessControl-config",
+        "host": "192.168.1.60",
+        "port": 80,
+        "name": "",
+        "protocol": "http",
+        "deviceinfo": "{\"?xml\":\"\",\"DeviceInfo\":{\"deviceName\":\"Access Controller\",\"deviceID\":255,\"model\":\"DS-K1T342MFX\",\"serialNumber\":\"DS-K1T342MFX20250307V043800ENGG2731470\",\"macAddress\":\"88:DE:39:3B:4E:B5\",\"firmwareVersion\":\"V4.38.0\",\"firmwareReleasedDate\":\"build 250307\",\"encoderVersion\":\"V2.9\",\"encoderReleasedDate\":\"build 250117\",\"hardwareVersion\":\"V1.0.0\",\"deviceType\":\"ACS\",\"subDeviceType\":\"accessControlTerminal\",\"localZoneNum\":0,\"alarmOutNum\":0,\"electroLockNum\":1,\"RS485Num\":1,\"manufacturer\":\"hikvision\",\"OEMCode\":1,\"marketType\":1,\"dispalyNum\":1,\"bspVersion\":\"V1.6.1.751013 build 241114\",\"dspVersion\":\"V2.9 build 250117\",\"productionDate\":\"2025-09-24\"}}",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "15dfd4d66ce71135",
+        "type": "AccessControl-config",
+        "host": "192.168.1.63",
+        "port": 80,
+        "name": "O2.02.12",
+        "protocol": "http",
+        "deviceinfo": "{\"?xml\":\"\",\"DeviceInfo\":{\"deviceName\":\"Access Controller\",\"deviceID\":255,\"model\":\"DS-K1T342MFX\",\"serialNumber\":\"DS-K1T342MFX20250307V043800ENGK0876757\",\"macAddress\":\"88:DE:39:46:F5:71\",\"firmwareVersion\":\"V4.38.0\",\"firmwareReleasedDate\":\"build 250307\",\"encoderVersion\":\"V2.9\",\"encoderReleasedDate\":\"build 250117\",\"hardwareVersion\":\"V1.0.0\",\"deviceType\":\"ACS\",\"subDeviceType\":\"accessControlTerminal\",\"localZoneNum\":0,\"alarmOutNum\":0,\"electroLockNum\":1,\"RS485Num\":1,\"manufacturer\":\"hikvision\",\"OEMCode\":1,\"marketType\":1,\"dispalyNum\":1,\"bspVersion\":\"V1.6.1.751013 build 241114\",\"dspVersion\":\"V2.9 build 250117\",\"productionDate\":\"2025-11-05\"}}",
+        "authentication": "digest",
+        "debuglevel": "yes"
+    },
+    {
+        "id": "a8576c272ccf04f9",
+        "type": "AccessControl-config",
+        "host": "192.168.1.64",
+        "port": 80,
+        "name": "O2.02.13",
+        "protocol": "http",
+        "deviceinfo": "{\"?xml\":\"\",\"DeviceInfo\":{\"deviceName\":\"Access Controller\",\"deviceID\":255,\"model\":\"DS-K1T342MFX\",\"serialNumber\":\"DS-K1T342MFX20250307V043800ENGK0876746\",\"macAddress\":\"88:DE:39:46:F5:66\",\"firmwareVersion\":\"V4.38.0\",\"firmwareReleasedDate\":\"build 250307\",\"encoderVersion\":\"V2.9\",\"encoderReleasedDate\":\"build 250117\",\"hardwareVersion\":\"V1.0.0\",\"deviceType\":\"ACS\",\"subDeviceType\":\"accessControlTerminal\",\"localZoneNum\":0,\"alarmOutNum\":0,\"electroLockNum\":1,\"RS485Num\":1,\"manufacturer\":\"hikvision\",\"OEMCode\":1,\"marketType\":1,\"dispalyNum\":1,\"bspVersion\":\"V1.6.1.751013 build 241114\",\"dspVersion\":\"V2.9 build 250117\",\"productionDate\":\"2025-11-05\"}}",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "19bc277ac3f003e3",
+        "type": "AccessControl-config",
+        "host": "192.168.1.62",
+        "port": 80,
+        "name": "O2.02.14",
+        "protocol": "http",
+        "deviceinfo": "{\"?xml\":\"\",\"DeviceInfo\":{\"deviceName\":\"Access Controller\",\"deviceID\":255,\"model\":\"DS-K1T342MFX\",\"serialNumber\":\"DS-K1T342MFX20250307V043800ENGK0876659\",\"macAddress\":\"88:DE:39:46:F5:0F\",\"firmwareVersion\":\"V4.38.0\",\"firmwareReleasedDate\":\"build 250307\",\"encoderVersion\":\"V2.9\",\"encoderReleasedDate\":\"build 250117\",\"hardwareVersion\":\"V1.0.0\",\"deviceType\":\"ACS\",\"subDeviceType\":\"accessControlTerminal\",\"localZoneNum\":0,\"alarmOutNum\":0,\"electroLockNum\":1,\"RS485Num\":1,\"manufacturer\":\"hikvision\",\"OEMCode\":1,\"marketType\":1,\"dispalyNum\":1,\"bspVersion\":\"V1.6.1.751013 build 241114\",\"dspVersion\":\"V2.9 build 250117\",\"productionDate\":\"2025-11-05\"}}",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "63077ae97b6e029b",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-hikvision-ultimate": "1.4.1"
+        }
+    },
+    {
+        "id": "access_httpReq",
+        "type": "http request",
+        "z": "14712064f2909bd2",
+        "name": "HTTP request (Web API device-event)",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": true,
+        "headers": [],
+        "x": 1000,
+        "y": 40,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "access_httpCatch",
+        "type": "catch",
+        "z": "14712064f2909bd2",
+        "name": "catch_httpReq_access",
+        "scope": [
+            "access_httpReq"
+        ],
+        "uncaught": false,
+        "x": 1000,
+        "y": 80,
+        "wires": [
+            [
+                "access_httpRetryFn"
+            ]
+        ]
+    },
+    {
+        "id": "access_httpRetryFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "retry_or_drop_access",
+        "func": "// Ditambahkan: Web API sesekali sempat tidak terjangkau sesaat (bukan\n// backend mati). Coba lagi otomatis (maks 3x, jeda 2 detik) sebelum\n// menyerah diam-diam, supaya tidak muncul sebagai error di log.\nmsg._retryCount = (msg._retryCount || 0) + 1;\nif (msg._retryCount > 3) {\n    node.warn(\"Web API tidak terjangkau setelah 3x percobaan (access-event): \" + (msg.error && msg.error.message));\n    return null;\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 120,
+        "wires": [
+            [
+                "access_httpRetryDelay"
+            ]
+        ]
+    },
+    {
+        "id": "access_httpRetryDelay",
+        "type": "delay",
+        "z": "14712064f2909bd2",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1000,
+        "y": 160,
+        "wires": [
+            [
+                "access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "O20210_doorTriggerFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_door_trigger_O2.02.10",
+        "func": "// Ditambahkan: tap RFID (akses berhasil) -> nyalakan AC+Lampu ruangan ini\n// lewat FIP-CONTROL-HUB (port 5100), source \"door_access\" supaya UG65 tahu\n// ini trigger pintu (jendela 25 menit), bukan perintah Web biasa (30 menit).\nmsg.payload = JSON.stringify({\n    classKey: \"o20210\",\n    state: \"on\",\n    source: \"door_access\"\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 240,
+        "wires": [
+            [
+                "O20210_doorTriggerTcpOut"
+            ]
+        ]
+    },
+    {
+        "id": "O20210_doorTriggerTcpOut",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "TCP OUT ke Control Hub (O2.02.10)",
+        "host": "127.0.0.1",
+        "port": "5100",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 950,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "O20210_accessAlertFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_access_alert_O2.02.10",
+        "func": "// Ditambahkan: kirim event akses (Major 5/Minor 1 = verifikasi sukses) ke Web\n// sebagai alert, tanpa mengubah wiring tcp-out/link-out yang sudah ada.\nvar p = msg.payload || {};\n\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5001/api/v1/alerts/device-event\";\nmsg.payload = {\n    ...p,\n    eventDescription: p.eventDescription || 'Akses berhasil (Major 5 / Minor 1)',\n    doorNo: p.doorNo,\n    serialNo: p.serialNo,\n    currentVerifyMode: p.currentVerifyMode,\n    time: p.time || new Date().toISOString(),\n    room: \"O2.02.10\",\n    source: \"FIP-ACCESS-CONTROL.O2.02.10\"\n};\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 200,
+        "wires": [
+            [
+                "access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "O20211_doorTriggerFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_door_trigger_O2.02.11",
+        "func": "// Ditambahkan: tap RFID (akses berhasil) -> nyalakan AC+Lampu ruangan ini\n// lewat FIP-CONTROL-HUB (port 5100), source \"door_access\" supaya UG65 tahu\n// ini trigger pintu (jendela 25 menit), bukan perintah Web biasa (30 menit).\nmsg.payload = JSON.stringify({\n    classKey: \"o20211\",\n    state: \"on\",\n    source: \"door_access\"\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 320,
+        "wires": [
+            [
+                "O20211_doorTriggerTcpOut"
+            ]
+        ]
+    },
+    {
+        "id": "O20211_doorTriggerTcpOut",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "TCP OUT ke Control Hub (O2.02.11)",
+        "host": "127.0.0.1",
+        "port": "5100",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 950,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "O20211_accessAlertFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_access_alert_O2.02.11",
+        "func": "// Ditambahkan: kirim event akses (Major 5/Minor 1 = verifikasi sukses) ke Web\n// sebagai alert, tanpa mengubah wiring tcp-out/link-out yang sudah ada.\nvar p = msg.payload || {};\n\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5001/api/v1/alerts/device-event\";\nmsg.payload = {\n    ...p,\n    eventDescription: p.eventDescription || 'Akses berhasil (Major 5 / Minor 1)',\n    doorNo: p.doorNo,\n    serialNo: p.serialNo,\n    currentVerifyMode: p.currentVerifyMode,\n    time: p.time || new Date().toISOString(),\n    room: \"O2.02.11\",\n    source: \"FIP-ACCESS-CONTROL.O2.02.11\"\n};\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 280,
+        "wires": [
+            [
+                "access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "O20212_doorTriggerFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_door_trigger_O2.02.12",
+        "func": "// Ditambahkan: tap RFID (akses berhasil) -> nyalakan AC+Lampu ruangan ini\n// lewat FIP-CONTROL-HUB (port 5100), source \"door_access\" supaya UG65 tahu\n// ini trigger pintu (jendela 25 menit), bukan perintah Web biasa (30 menit).\nmsg.payload = JSON.stringify({\n    classKey: \"o20212\",\n    state: \"on\",\n    source: \"door_access\"\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 400,
+        "wires": [
+            [
+                "O20212_doorTriggerTcpOut"
+            ]
+        ]
+    },
+    {
+        "id": "O20212_doorTriggerTcpOut",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "TCP OUT ke Control Hub (O2.02.12)",
+        "host": "127.0.0.1",
+        "port": "5100",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 950,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "O20212_accessAlertFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_access_alert_O2.02.12",
+        "func": "// Ditambahkan: kirim event akses (Major 5/Minor 1 = verifikasi sukses) ke Web\n// sebagai alert, tanpa mengubah wiring tcp-out/link-out yang sudah ada.\nvar p = msg.payload || {};\n\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5001/api/v1/alerts/device-event\";\nmsg.payload = {\n    ...p,\n    eventDescription: p.eventDescription || 'Akses berhasil (Major 5 / Minor 1)',\n    doorNo: p.doorNo,\n    serialNo: p.serialNo,\n    currentVerifyMode: p.currentVerifyMode,\n    time: p.time || new Date().toISOString(),\n    room: \"O2.02.12\",\n    source: \"FIP-ACCESS-CONTROL.O2.02.12\"\n};\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 360,
+        "wires": [
+            [
+                "access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "O20213_doorTriggerFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_door_trigger_O2.02.13",
+        "func": "// Ditambahkan: tap RFID (akses berhasil) -> nyalakan AC+Lampu ruangan ini\n// lewat FIP-CONTROL-HUB (port 5100), source \"door_access\" supaya UG65 tahu\n// ini trigger pintu (jendela 25 menit), bukan perintah Web biasa (30 menit).\nmsg.payload = JSON.stringify({\n    classKey: \"o20213\",\n    state: \"on\",\n    source: \"door_access\"\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 480,
+        "wires": [
+            [
+                "O20213_doorTriggerTcpOut"
+            ]
+        ]
+    },
+    {
+        "id": "O20213_doorTriggerTcpOut",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "TCP OUT ke Control Hub (O2.02.13)",
+        "host": "127.0.0.1",
+        "port": "5100",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 950,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "O20213_accessAlertFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_access_alert_O2.02.13",
+        "func": "// Ditambahkan: kirim event akses (Major 5/Minor 1 = verifikasi sukses) ke Web\n// sebagai alert, tanpa mengubah wiring tcp-out/link-out yang sudah ada.\nvar p = msg.payload || {};\n\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5001/api/v1/alerts/device-event\";\nmsg.payload = {\n    ...p,\n    eventDescription: p.eventDescription || 'Akses berhasil (Major 5 / Minor 1)',\n    doorNo: p.doorNo,\n    serialNo: p.serialNo,\n    currentVerifyMode: p.currentVerifyMode,\n    time: p.time || new Date().toISOString(),\n    room: \"O2.02.13\",\n    source: \"FIP-ACCESS-CONTROL.O2.02.13\"\n};\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 440,
+        "wires": [
+            [
+                "access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "O20214_doorTriggerFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_door_trigger_O2.02.14",
+        "func": "// Ditambahkan: tap RFID (akses berhasil) -> nyalakan AC+Lampu ruangan ini\n// lewat FIP-CONTROL-HUB (port 5100), source \"door_access\" supaya UG65 tahu\n// ini trigger pintu (jendela 25 menit), bukan perintah Web biasa (30 menit).\nmsg.payload = JSON.stringify({\n    classKey: \"o20214\",\n    state: \"on\",\n    source: \"door_access\"\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 560,
+        "wires": [
+            [
+                "O20214_doorTriggerTcpOut"
+            ]
+        ]
+    },
+    {
+        "id": "O20214_doorTriggerTcpOut",
+        "type": "tcp out",
+        "z": "14712064f2909bd2",
+        "name": "TCP OUT ke Control Hub (O2.02.14)",
+        "host": "127.0.0.1",
+        "port": "5100",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 950,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "O20214_accessAlertFn",
+        "type": "function",
+        "z": "14712064f2909bd2",
+        "name": "build_access_alert_O2.02.14",
+        "func": "// Ditambahkan: kirim event akses (Major 5/Minor 1 = verifikasi sukses) ke Web\n// sebagai alert, tanpa mengubah wiring tcp-out/link-out yang sudah ada.\nvar p = msg.payload || {};\n\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5001/api/v1/alerts/device-event\";\nmsg.payload = {\n    ...p,\n    eventDescription: p.eventDescription || 'Akses berhasil (Major 5 / Minor 1)',\n    doorNo: p.doorNo,\n    serialNo: p.serialNo,\n    currentVerifyMode: p.currentVerifyMode,\n    time: p.time || new Date().toISOString(),\n    room: \"O2.02.14\",\n    source: \"FIP-ACCESS-CONTROL.O2.02.14\"\n};\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 520,
+        "wires": [
+            [
+                "access_httpReq"
+            ]
+        ]
+    }
+]

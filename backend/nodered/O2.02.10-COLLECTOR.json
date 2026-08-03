@@ -1,0 +1,765 @@
+[
+    {
+        "id": "2f405e2e605031ab",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "dd6495b7a85c42c7",
+        "type": "tcp in",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "server": "server",
+        "host": "192.168.1.61",
+        "port": "801",
+        "datamode": "stream",
+        "datatype": "buffer",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 180,
+        "y": 600,
+        "wires": [
+            [
+                "d98c9c0625f09948"
+            ]
+        ]
+    },
+    {
+        "id": "8c75e13fa01f44f0",
+        "type": "modbus-write",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "2",
+        "dataType": "HoldingRegister",
+        "adr": "0",
+        "quantity": "1",
+        "server": "6c61ab262f24011c",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1200,
+        "y": 680,
+        "wires": [
+            [
+                "e4b027341be5c75a"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "bafec7165c1e10ce",
+        "type": "change",
+        "z": "2f405e2e605031ab",
+        "name": "AC ON",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "1",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 980,
+        "y": 580,
+        "wires": [
+            [
+                "8c75e13fa01f44f0"
+            ]
+        ]
+    },
+    {
+        "id": "858e2ad98aae425d",
+        "type": "change",
+        "z": "2f405e2e605031ab",
+        "name": "AC OFF",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "0",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 980,
+        "y": 800,
+        "wires": [
+            [
+                "8c75e13fa01f44f0"
+            ]
+        ]
+    },
+    {
+        "id": "e4b027341be5c75a",
+        "type": "debug",
+        "z": "2f405e2e605031ab",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1400,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "39488198e6d14de7",
+        "type": "LoRa Output",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "eui": "24E124771057E2BB",
+        "payloadType": "hex",
+        "payload": "0833ff",
+        "confirmed": false,
+        "port": 85,
+        "x": 990,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "f3237f5b3dc379d1",
+        "type": "LoRa Output",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "eui": "24E124771057E2BB",
+        "payloadType": "hex",
+        "payload": "0830ff",
+        "confirmed": false,
+        "port": 85,
+        "x": 990,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "f6a57804deec1a8a",
+        "type": "switch",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "on",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "off",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 730,
+        "y": 680,
+        "wires": [
+            [
+                "bafec7165c1e10ce",
+                "39488198e6d14de7",
+                "o20210_acStatusFn",
+                "o20210_lampStatusFn"
+            ],
+            [
+                "f3237f5b3dc379d1",
+                "858e2ad98aae425d",
+                "o20210_acStatusFn",
+                "o20210_lampStatusFn"
+            ]
+        ]
+    },
+    {
+        "id": "9573a8080a9215f0",
+        "type": "inject",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "on",
+        "payloadType": "str",
+        "x": 510,
+        "y": 780,
+        "wires": [
+            [
+                "f6a57804deec1a8a"
+            ]
+        ]
+    },
+    {
+        "id": "51f89363cb51742a",
+        "type": "inject",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "off",
+        "payloadType": "str",
+        "x": 510,
+        "y": 840,
+        "wires": [
+            [
+                "f6a57804deec1a8a"
+            ]
+        ]
+    },
+    {
+        "id": "656d766abf156bcc",
+        "type": "LoRa Input",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "devEUI": "",
+        "extendedField": "",
+        "x": 160,
+        "y": 220,
+        "wires": [
+            [
+                "bb82a31031ae78e6",
+                "a135e294b06373b5"
+            ]
+        ]
+    },
+    {
+        "id": "bb82a31031ae78e6",
+        "type": "Device Filter",
+        "z": "2f405e2e605031ab",
+        "name": "VS370",
+        "eui": "24E12477306168FB",
+        "x": 350,
+        "y": 220,
+        "wires": [
+            [
+                "2d8feff1314eb8e8"
+            ]
+        ]
+    },
+    {
+        "id": "2d8feff1314eb8e8",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "VS370 Decoder",
+        "func": "/**\n * Payload Decoder\n *\n * Copyright 2025 Milesight IoT\n *\n * @product VS370\n *\n * Paste this complete script into a Node-RED Function node placed directly\n * after the Milesight \"LoRa Input\" / \"Device Filter\" node.\n */\nvar RAW_VALUE = 0x00;\n\n/* eslint no-redeclare: \"off\" */\n/* eslint-disable */\n// Chirpstack v4\nfunction decodeUplink(input) {\n    var decoded = milesightDeviceDecode(input.bytes);\n    return { data: decoded };\n}\n\n// Chirpstack v3\nfunction Decode(fPort, bytes) {\n    return milesightDeviceDecode(bytes);\n}\n\n// The Things Network\nfunction Decoder(bytes, port) {\n    return milesightDeviceDecode(bytes);\n}\n/* eslint-enable */\n\nfunction milesightDeviceDecode(bytes) {\n    var decoded = {};\n\n    for (var i = 0; i < bytes.length;) {\n        var channel_id = bytes[i++];\n        var channel_type = bytes[i++];\n\n        // IPSO VERSION\n        if (channel_id === 0xff && channel_type === 0x01) {\n            decoded.ipso_version = readProtocolVersion(bytes[i]);\n            i += 1;\n        }\n        // HARDWARE VERSION\n        else if (channel_id === 0xff && channel_type === 0x09) {\n            decoded.hardware_version = readHardwareVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // FIRMWARE VERSION\n        else if (channel_id === 0xff && channel_type === 0x0a) {\n            decoded.firmware_version = readFirmwareVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // TSL VERSION\n        else if (channel_id === 0xff && channel_type === 0xff) {\n            decoded.tsl_version = readTslVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // SERIAL NUMBER\n        else if (channel_id === 0xff && channel_type === 0x16) {\n            decoded.sn = readSerialNumber(bytes.slice(i, i + 8));\n            i += 8;\n        }\n        // LORAWAN CLASS TYPE\n        else if (channel_id === 0xff && channel_type === 0x0f) {\n            decoded.lorawan_class = readLoRaWANClass(bytes[i]);\n            i += 1;\n        }\n        // RESET EVENT\n        else if (channel_id === 0xff && channel_type === 0xfe) {\n            decoded.reset_event = readResetEvent(1);\n            i += 1;\n        }\n        // DEVICE STATUS\n        else if (channel_id === 0xff && channel_type === 0x0b) {\n            decoded.device_status = readDeviceStatus(1);\n            i += 1;\n        }\n        // BATTERY\n        else if (channel_id === 0x01 && channel_type === 0x75) {\n            decoded.battery = readUInt8(bytes[i]);\n            i += 1;\n        }\n        // OCCUPANCY\n        else if (channel_id === 0x03 && channel_type === 0x00) {\n            decoded.occupancy = readOccupancyStatus(readUInt8(bytes[i]));\n            i += 1;\n        }\n        // ILLUMINANCE\n        else if (channel_id === 0x04 && channel_type === 0x00) {\n            decoded.illuminance = readIlluminanceStatus(readUInt8(bytes[i]));\n            i += 1;\n        }\n        // DOWNLINK RESPONSE\n        else if (channel_id === 0xfe || channel_id === 0xff) {\n            var result = handle_downlink_response(channel_type, bytes, i);\n            decoded = Object.assign(decoded, result.data);\n            i = result.offset;\n        } else if (channel_id === 0xf8 || channel_id === 0xf9) {\n            var result = handle_downlink_response_ext(channel_id, channel_type, bytes, i);\n            decoded = Object.assign(decoded, result.data);\n            i = result.offset;\n        } else {\n            break;\n        }\n    }\n\n    return decoded;\n}\n\nfunction handle_downlink_response(channel_type, bytes, offset) {\n    var decoded = {};\n\n    switch (channel_type) {\n        case 0x10:\n            decoded.reboot = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x28:\n            decoded.report_status = readReportType(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x35:\n            decoded.d2d_key = readHexString(bytes.slice(offset, offset + 8));\n            offset += 8;\n            break;\n        case 0x4a:\n            decoded.sync_time = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x84:\n            decoded.d2d_enable = readEnableStatus(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x8e:\n            // ignore the first byte\n            decoded.report_interval = readUInt16LE(bytes.slice(offset + 1, offset + 3));\n            offset += 3;\n            break;\n        case 0x8f:\n            decoded.bluetooth_enable = readEnableStatus(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x96:\n            var d2d_master_config = readD2DMasterConfig(bytes.slice(offset, offset + 8));\n            offset += 8;\n            decoded.d2d_master_config = decoded.d2d_master_config || [];\n            decoded.d2d_master_config.push(d2d_master_config);\n            break;\n        case 0xba:\n            decoded.dst_config = readDstConfig(bytes.slice(offset, offset + 10));\n            offset += 10;\n            break;\n        case 0xbd:\n            decoded.time_zone = readTimeZone(readInt16LE(bytes.slice(offset, offset + 2)));\n            offset += 2;\n            break;\n        default:\n            throw new Error(\"unknown downlink response\");\n    }\n\n    return { data: decoded, offset: offset };\n}\n\nfunction handle_downlink_response_ext(code, channel_type, bytes, offset) {\n    var decoded = {};\n\n    switch (channel_type) {\n        case 0x3e:\n            decoded.pir_sensitivity = readPirSensitivity(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x3f:\n            decoded.radar_sensitivity = readRadarSensitivity(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x40:\n            decoded.pir_idle_interval = readUInt8(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x41:\n            decoded.pir_illuminance_threshold = {};\n            decoded.pir_illuminance_threshold.enable = readEnableStatus(bytes[offset]);\n            decoded.pir_illuminance_threshold.upper_limit = readUInt16LE(bytes.slice(offset + 1, offset + 3));\n            decoded.pir_illuminance_threshold.lower_limit = readUInt16LE(bytes.slice(offset + 3, offset + 5));\n            offset += 5;\n            break;\n        case 0x42:\n            decoded.pir_window_time = readPirWindowTime(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x43:\n            decoded.pir_pulse_times = readPirPulseTimes(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x44:\n            var hibernate_config = readHibernateConfig(bytes.slice(offset, offset + 6));\n            offset += 6;\n            decoded.hibernate_config = decoded.hibernate_config || [];\n            decoded.hibernate_config.push(hibernate_config);\n            break;\n        default:\n            throw new Error(\"unknown downlink response\");\n    }\n\n    if (hasResultFlag(code)) {\n        var result_value = readUInt8(bytes[offset]);\n        offset += 1;\n\n        if (result_value !== 0) {\n            var request = decoded;\n            decoded = {};\n            decoded.device_response_result = {};\n            decoded.device_response_result.channel_type = channel_type;\n            decoded.device_response_result.result = readResultStatus(result_value);\n            decoded.device_response_result.request = request;\n        }\n    }\n\n    return { data: decoded, offset: offset };\n}\n\nfunction hasResultFlag(code) {\n    return code === 0xf8;\n}\n\nfunction readResultStatus(status) {\n    var status_map = { 0: \"success\", 1: \"forbidden\", 2: \"invalid parameter\" };\n    return getValue(status_map, status);\n}\n\nfunction readProtocolVersion(bytes) {\n    var major = (bytes & 0xf0) >> 4;\n    var minor = bytes & 0x0f;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readHardwareVersion(bytes) {\n    var major = (bytes[0] & 0xff).toString(16);\n    var minor = (bytes[1] & 0xff) >> 4;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readFirmwareVersion(bytes) {\n    var major = (bytes[0] & 0xff).toString(16);\n    var minor = (bytes[1] & 0xff).toString(16);\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readTslVersion(bytes) {\n    var major = bytes[0] & 0xff;\n    var minor = bytes[1] & 0xff;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readSerialNumber(bytes) {\n    var temp = [];\n    for (var idx = 0; idx < bytes.length; idx++) {\n        temp.push((\"0\" + (bytes[idx] & 0xff).toString(16)).slice(-2));\n    }\n    return temp.join(\"\");\n}\n\nfunction readLoRaWANClass(type) {\n    var class_map = {\n        0: \"Class A\",\n        1: \"Class B\",\n        2: \"Class C\",\n        3: \"Class CtoB\",\n    };\n    return getValue(class_map, type);\n}\n\nfunction readResetEvent(status) {\n    var status_map = { 0: \"normal\", 1: \"reset\" };\n    return getValue(status_map, status);\n}\n\nfunction readDeviceStatus(status) {\n    var status_map = { 0: \"off\", 1: \"on\" };\n    return getValue(status_map, status);\n}\n\nfunction readOccupancyStatus(status) {\n    var status_map = { 0: \"vacant\", 1: \"occupied\" };\n    return getValue(status_map, status);\n}\n\nfunction readIlluminanceStatus(status) {\n    var status_map = { 0: \"dim\", 1: \"bright\", 254: \"disable\" };\n    return getValue(status_map, status);\n}\n\nfunction readEnableStatus(status) {\n    var status_map = { 0: \"disable\", 1: \"enable\" };\n    return getValue(status_map, status);\n}\n\nfunction readYesNoStatus(status) {\n    var status_map = { 0: \"no\", 1: \"yes\" };\n    return getValue(status_map, status);\n}\n\nfunction readReportType(status) {\n    var status_map = { 0: \"plan\", 1: \"periodic\" };\n    return getValue(status_map, status);\n}\n\nfunction readPirSensitivity(status) {\n    var status_map = { 0: \"low\", 1: \"medium\", 2: \"high\" };\n    return getValue(status_map, status);\n}\n\nfunction readPirWindowTime(status) {\n    var status_map = { 0: \"2s\", 1: \"4s\", 2: \"6s\", 3: \"8s\" };\n    return getValue(status_map, status);\n}\n\nfunction readPirPulseTimes(status) {\n    var status_map = { 0: \"1_times\", 1: \"2_times\", 2: \"3_times\", 3: \"4_times\" };\n    return getValue(status_map, status);\n}\n\nfunction readRadarSensitivity(status) {\n    var status_map = { 0: \"low\", 1: \"medium\", 2: \"high\" };\n    return getValue(status_map, status);\n}\n\nfunction readDstConfig(bytes) {\n    var offset = 0;\n\n    var dst_config = {};\n    var enable_value = bytes[offset];\n    dst_config.enable = readEnableStatus(enable_value);\n    dst_config.offset = readUInt8(bytes[offset + 1]);\n    if (enable_value === 1) {\n        dst_config.start_month = readMonth(bytes[offset + 2]);\n        var start_week_value = bytes[offset + 3];\n        dst_config.start_week_num = start_week_value >> 4;\n        dst_config.start_week_day = readWeek(start_week_value & 0x0f);\n        dst_config.start_time = readUInt16LE(bytes.slice(offset + 4, offset + 6));\n        dst_config.end_month = readMonth(bytes[offset + 6]);\n        var end_week_value = bytes[offset + 7];\n        dst_config.end_week_num = end_week_value >> 4;\n        dst_config.end_week_day = readWeek(end_week_value & 0x0f);\n        dst_config.end_time = readUInt16LE(bytes.slice(offset + 8, offset + 10));\n    }\n    offset += 10;\n\n    return dst_config;\n}\n\nfunction readMonth(month) {\n    var month_map = { 1: \"January\", 2: \"February\", 3: \"March\", 4: \"April\", 5: \"May\", 6: \"June\", 7: \"July\", 8: \"August\", 9: \"September\", 10: \"October\", 11: \"November\", 12: \"December\" };\n    return getValue(month_map, month);\n}\n\nfunction readWeek(week) {\n    var week_map = { 1: \"Monday\", 2: \"Tuesday\", 3: \"Wednesday\", 4: \"Thursday\", 5: \"Friday\", 6: \"Saturday\", 7: \"Sunday\" };\n    return getValue(week_map, week);\n}\n\nfunction readTimeZone(time_zone) {\n    var timezone_map = { \"-720\": \"UTC-12\", \"-660\": \"UTC-11\", \"-600\": \"UTC-10\", \"-570\": \"UTC-9:30\", \"-540\": \"UTC-9\", \"-480\": \"UTC-8\", \"-420\": \"UTC-7\", \"-360\": \"UTC-6\", \"-300\": \"UTC-5\", \"-240\": \"UTC-4\", \"-210\": \"UTC-3:30\", \"-180\": \"UTC-3\", \"-120\": \"UTC-2\", \"-60\": \"UTC-1\", 0: \"UTC\", 60: \"UTC+1\", 120: \"UTC+2\", 180: \"UTC+3\", 210: \"UTC+3:30\", 240: \"UTC+4\", 270: \"UTC+4:30\", 300: \"UTC+5\", 330: \"UTC+5:30\", 345: \"UTC+5:45\", 360: \"UTC+6\", 390: \"UTC+6:30\", 420: \"UTC+7\", 480: \"UTC+8\", 540: \"UTC+9\", 570: \"UTC+9:30\", 600: \"UTC+10\", 630: \"UTC+10:30\", 660: \"UTC+11\", 720: \"UTC+12\", 765: \"UTC+12:45\", 780: \"UTC+13\", 840: \"UTC+14\" };\n    return getValue(timezone_map, time_zone);\n}\n\nfunction readD2DMasterConfig(bytes) {\n    var offset = 0;\n    var config = {};\n    config.mode = readD2DMode(readUInt8(bytes[offset]));\n    config.enable = readEnableStatus(bytes[offset + 1]);\n    config.lora_uplink_enable = readEnableStatus(bytes[offset + 2]);\n    config.d2d_cmd = readD2DCommand(bytes.slice(offset + 3, offset + 5));\n    config.time = readUInt16LE(bytes.slice(offset + 5, offset + 7));\n    config.time_enable = readEnableStatus(bytes[offset + 7]);\n    return config;\n}\n\nfunction readD2DCommand(bytes) {\n    return (\"0\" + (bytes[1] & 0xff).toString(16)).slice(-2) + (\"0\" + (bytes[0] & 0xff).toString(16)).slice(-2);\n}\n\nfunction readD2DMode(type) {\n    var mode_map = { 0: \"occupied\", 1: \"vacant\", 2: \"bright\", 3: \"dim\", 4: \"occupied_bright\", 5: \"occupied_dim\" };\n    return getValue(mode_map, type);\n}\n\nfunction readHibernateConfig(bytes) {\n    var offset = 0;\n    var config = {};\n    config.id = readUInt8(bytes[offset]) + 1;\n    config.enable = readEnableStatus(bytes[offset + 1]);\n    config.start_time = readUInt16LE(bytes.slice(offset + 2, offset + 4));\n    config.end_time = readUInt16LE(bytes.slice(offset + 4, offset + 6));\n    return config;\n}\n\n/* eslint-disable */\nfunction readUInt8(bytes) {\n    return bytes & 0xff;\n}\n\nfunction readInt8(bytes) {\n    var ref = readUInt8(bytes);\n    return ref > 0x7f ? ref - 0x100 : ref;\n}\n\nfunction readUInt16LE(bytes) {\n    var value = (bytes[1] << 8) + bytes[0];\n    return value & 0xffff;\n}\n\nfunction readInt16LE(bytes) {\n    var ref = readUInt16LE(bytes);\n    return ref > 0x7fff ? ref - 0x10000 : ref;\n}\n\nfunction readUInt32LE(bytes) {\n    var value = (bytes[3] << 24) + (bytes[2] << 16) + (bytes[1] << 8) + bytes[0];\n    return (value & 0xffffffff) >>> 0;\n}\n\nfunction readInt32LE(bytes) {\n    var ref = readUInt32LE(bytes);\n    return ref > 0x7fffffff ? ref - 0x100000000 : ref;\n}\n\nfunction readHexString(bytes) {\n    var temp = [];\n    for (var i = 0; i < bytes.length; i++) {\n        temp.push((\"0\" + (bytes[i] & 0xff).toString(16)).slice(-2));\n    }\n    return temp.join(\"\");\n}\n\nfunction getValue(map, key) {\n    if (RAW_VALUE) return key;\n\n    var value = map[key];\n    if (!value) value = \"unknown\";\n    return value;\n}\n\nif (!Object.assign) {\n    Object.defineProperty(Object, \"assign\", {\n        enumerable: false,\n        configurable: true,\n        writable: true,\n        value: function (target) {\n            \"use strict\";\n            if (target == null) {\n                throw new TypeError(\"Cannot convert first argument to object\");\n            }\n\n            var to = Object(target);\n            for (var i = 1; i < arguments.length; i++) {\n                var nextSource = arguments[i];\n                if (nextSource == null) {\n                    continue;\n                }\n                nextSource = Object(nextSource);\n\n                var keysArray = Object.keys(Object(nextSource));\n                for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {\n                    var nextKey = keysArray[nextIndex];\n                    var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);\n                    if (desc !== undefined && desc.enumerable) {\n                        // concat array\n                        if (Array.isArray(to[nextKey]) && Array.isArray(nextSource[nextKey])) {\n                            to[nextKey] = to[nextKey].concat(nextSource[nextKey]);\n                        } else {\n                            to[nextKey] = nextSource[nextKey];\n                        }\n                    }\n                }\n            }\n            return to;\n        },\n    });\n}\n\n/**\n * Node-RED adapter for Milesight LoRa Input.\n * Expected input: msg.payload as a Base64 string, Buffer, or byte array.\n * Successful output:\n *   - msg.buffer  = a copy of the raw uplink bytes\n *   - msg.payload = decoded VS370 data\n */\nfunction parseNodeRedPayload(payload) {\n    if (Buffer.isBuffer(payload)) {\n        if (payload.length === 0) {\n            throw new Error(\"VS370 decoder: msg.payload Buffer is empty\");\n        }\n        return Buffer.from(payload);\n    }\n\n    if (Array.isArray(payload)) {\n        if (payload.length === 0) {\n            throw new Error(\"VS370 decoder: msg.payload byte array is empty\");\n        }\n        for (var i = 0; i < payload.length; i++) {\n            var value = payload[i];\n            if (typeof value !== \"number\" || !isFinite(value) || Math.floor(value) !== value || value < 0 || value > 255) {\n                throw new TypeError(\"VS370 decoder: byte array item at index \" + i + \" must be an integer from 0 to 255\");\n            }\n        }\n        return Buffer.from(payload);\n    }\n\n    if (typeof payload !== \"string\") {\n        throw new TypeError(\"VS370 decoder: msg.payload must be a Base64 string, Buffer, or byte array\");\n    }\n\n    var encoded = payload.trim();\n    if (encoded.length === 0) {\n        throw new Error(\"VS370 decoder: msg.payload Base64 string is empty\");\n    }\n\n    // Accept standard padded or unpadded Base64, but reject malformed input.\n    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) || encoded.length % 4 === 1) {\n        throw new Error(\"VS370 decoder: msg.payload is not valid Base64\");\n    }\n    if (encoded.indexOf(\"=\") !== -1 && encoded.length % 4 !== 0) {\n        throw new Error(\"VS370 decoder: invalid Base64 padding\");\n    }\n\n    var unpadded = encoded.replace(/=+$/, \"\");\n    var padded = encoded;\n    while (padded.length % 4 !== 0) {\n        padded += \"=\";\n    }\n\n    var raw = Buffer.from(padded, \"base64\");\n    if (raw.length === 0 || raw.toString(\"base64\").replace(/=+$/, \"\") !== unpadded) {\n        throw new Error(\"VS370 decoder: msg.payload is not canonical Base64\");\n    }\n\n    return raw;\n}\n\ntry {\n    var rawBuffer = parseNodeRedPayload(msg.payload);\n    msg.buffer = Buffer.from(rawBuffer);\n    msg.payload = Decoder(rawBuffer, msg.fPort !== undefined ? msg.fPort : msg.port);\n    return msg;\n} catch (error) {\n    node.error(error.message, msg);\n    return null;\n}\n",
+        "outputs": 1,
+        "noerr": 55,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 220,
+        "wires": [
+            [
+                "b6ccc71a4233351e",
+                "1c21aea64b980137"
+            ]
+        ]
+    },
+    {
+        "id": "b6ccc71a4233351e",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "Parse VS370",
+        "func": "var data = msg.payload;\n\nif (!data || typeof data !== \"object\") {\n    node.warn(\"Parse VS370: payload decoder tidak valid\");\n    return null;\n}\n\nvar occupancy = data.occupancy;\n\n// Mendukung hasil teks maupun RAW 0/1\nif (occupancy === \"occupied\" || occupancy === 1) {\n    data.occupancy = \"occupied\";\n    data.state = \"on\";\n} else if (occupancy === \"vacant\" || occupancy === 0) {\n    data.occupancy = \"vacant\";\n    data.state = \"off\";\n} else {\n    node.warn(\"Parse VS370: status occupancy tidak dikenal: \" + occupancy);\n    return null;\n}\n\nmsg.payload = data;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 220,
+        "wires": [
+            [
+                "fa50b0b73dcb4994",
+                "o20210_consFromOcc",
+                "o20210_occupancyAutoControl"
+            ]
+        ]
+    },
+    {
+        "id": "1c21aea64b980137",
+        "type": "debug",
+        "z": "2f405e2e605031ab",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "fa50b0b73dcb4994",
+        "type": "debug",
+        "z": "2f405e2e605031ab",
+        "name": "occupancy",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1010,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "d98c9c0625f09948",
+        "type": "change",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"state\":\"on\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 600,
+        "wires": [
+            [
+                "f6a57804deec1a8a"
+            ]
+        ]
+    },
+    {
+        "id": "cda6410d1727a1bb",
+        "type": "tcp in",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "server": "server",
+        "host": "",
+        "port": "5110",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 140,
+        "y": 680,
+        "wires": [
+            [
+                "edd4cb2c2d82f747"
+            ]
+        ]
+    },
+    {
+        "id": "edd4cb2c2d82f747",
+        "type": "json",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 290,
+        "y": 680,
+        "wires": [
+            [
+                "9429acdb1106643b"
+            ]
+        ]
+    },
+    {
+        "id": "9429acdb1106643b",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "manual_override",
+        "func": "let state = msg.payload.state;\n\nif (typeof state === \"string\") {\n    state = state.toLowerCase();\n}\n\nif (![\"on\", \"off\"].includes(state)) {\n    node.warn(\"State tidak valid: \" + state);\n    return null;\n}\n\nlet className = \"O2.02.10\";\nlet source = (msg.payload && msg.payload.source) || \"web_api\";\n\nif (source === \"door_access\") {\n    // Tap RFID (pintu terbuka): nyalakan, tahan 25 menit tanpa mengikuti okupansi.\n    global.set(`door_window_${className}`, {\n        active: true,\n        until: Date.now() + 25 * 60 * 1000\n    });\n} else {\n    // Perintah manual dari Web/API: menang mutlak 30 menit (pola lama).\n    let until = Date.now() + 30 * 60 * 1000;\n    global.set(`override_${className}`, {\n        active: true,\n        until: until,\n        state: state\n    });\n}\n\nmsg.override = {\n    className: className,\n    state: state,\n    source: source\n};\nmsg.payload = state;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 680,
+        "wires": [
+            [
+                "f6a57804deec1a8a",
+                "001c4139af9eeaef"
+            ]
+        ]
+    },
+    {
+        "id": "001c4139af9eeaef",
+        "type": "debug",
+        "z": "2f405e2e605031ab",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "a135e294b06373b5",
+        "type": "Device Filter",
+        "z": "2f405e2e605031ab",
+        "name": "WS502",
+        "eui": "24E124771057E2BB",
+        "x": 360,
+        "y": 300,
+        "wires": [
+            [
+                "bbeed33a481efb7d"
+            ]
+        ]
+    },
+    {
+        "id": "bbeed33a481efb7d",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "WS502 Decoder",
+        "func": "/**\n * Payload Decoder\n *\n * Copyright 2025 Milesight IoT\n *\n * @product WS502_EU\n */\nvar RAW_VALUE = 0x00;\n\n/* eslint no-redeclare: \"off\" */\n/* eslint-disable */\n// Chirpstack v4\nfunction decodeUplink(input) {\n    var decoded = milesightDeviceDecode(input.bytes);\n    return { data: decoded };\n}\n\n// Chirpstack v3\nfunction Decode(fPort, bytes) {\n    return milesightDeviceDecode(bytes);\n}\n\n// The Things Network\nfunction Decoder(bytes, port) {\n    return milesightDeviceDecode(bytes);\n}\n/* eslint-enable */\n\nfunction milesightDeviceDecode(bytes) {\n    var decoded = {};\n\n    for (var i = 0; i < bytes.length;) {\n        var channel_id = bytes[i++];\n        var channel_type = bytes[i++];\n\n        // IPSO VERSION\n        if (channel_id === 0xff && channel_type === 0x01) {\n            decoded.ipso_version = readProtocolVersion(bytes[i]);\n            i += 1;\n        }\n        // HARDWARE VERSION\n        else if (channel_id === 0xff && channel_type === 0x09) {\n            decoded.hardware_version = readHardwareVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // FIRMWARE VERSION\n        else if (channel_id === 0xff && channel_type === 0x0a) {\n            decoded.firmware_version = readFirmwareVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // TSL VERSION\n        else if (channel_id === 0xff && channel_type === 0xff) {\n            decoded.tsl_version = readTslVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // SERIAL NUMBER\n        else if (channel_id === 0xff && channel_type === 0x16) {\n            decoded.sn = readSerialNumber(bytes.slice(i, i + 8));\n            i += 8;\n        }\n        // LORAWAN CLASS TYPE\n        else if (channel_id === 0xff && channel_type === 0x0f) {\n            decoded.lorawan_class = readLoRaWANClass(bytes[i]);\n            i += 1;\n        }\n        // RESET EVENT\n        else if (channel_id === 0xff && channel_type === 0xfe) {\n            decoded.reset_event = readResetEvent(1);\n            i += 1;\n        }\n        // DEVICE STATUS\n        else if (channel_id === 0xff && channel_type === 0x0b) {\n            decoded.device_status = readOnOffStatus(1);\n            i += 1;\n        }\n        // VOLTAGE\n        else if (channel_id === 0x03 && channel_type === 0x74) {\n            decoded.voltage = readUInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n        }\n        // ACTIVE POWER\n        else if (channel_id === 0x04 && channel_type === 0x80) {\n            decoded.active_power = readUInt32LE(bytes.slice(i, i + 4));\n            i += 4;\n        }\n        // POWER FACTOR\n        else if (channel_id === 0x05 && channel_type === 0x81) {\n            decoded.power_factor = readUInt8(bytes[i]);\n            i += 1;\n        }\n        // POWER CONSUMPTION\n        else if (channel_id === 0x06 && channel_type == 0x83) {\n            decoded.power_consumption = readUInt32LE(bytes.slice(i, i + 4));\n            i += 4;\n        }\n        // CURRENT\n        else if (channel_id === 0x07 && channel_type == 0xc9) {\n            decoded.current = readUInt16LE(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        // SWITCH STATE\n        else if (channel_id === 0x08 && channel_type === 0x29) {\n            // payload (0 0 0 0 0 0 0 0)\n            //  Switch    3 2 1   3 2 1\n            //          ------- -------\n            // bit mask  change   state\n            var value = bytes[i];\n            decoded.switch_1 = readOnOffStatus((value >>> 0) & 0x01);\n            decoded.switch_1_change = readYesNoStatus((value >>> 4) & 0x01);\n            decoded.switch_2 = readOnOffStatus((value >>> 1) & 0x01);\n            decoded.switch_2_change = readYesNoStatus((value >>> 5) & 0x01);\n            i += 1;\n        }\n        // DOWNLINK RESPONSE\n        else if (channel_id === 0xfe || channel_id === 0xff) {\n            var result = handle_downlink_response(channel_type, bytes, i);\n            decoded = Object.assign(decoded, result.data);\n            i = result.offset;\n        } else {\n            break;\n        }\n    }\n\n    return decoded;\n}\n\nfunction handle_downlink_response(channel_type, bytes, offset) {\n    var decoded = {};\n\n    switch (channel_type) {\n        case 0x03:\n            decoded.report_interval = readUInt16LE(bytes.slice(offset, offset + 2));\n            offset += 2;\n            break;\n        case 0x10:\n            decoded.reboot = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x22:\n            decoded.delay_task = {};\n            decoded.delay_task.frame_count = readUInt8(bytes[offset]);\n            decoded.delay_task.delay_time = readUInt16LE(bytes.slice(offset + 1, offset + 3));\n            var data = readUInt8(bytes[offset + 3]);\n            var switch_bit_offset = { switch_1: 0, switch_2: 1, switch_3: 2 };\n            for (var key in switch_bit_offset) {\n                if ((data >>> (switch_bit_offset[key] + 4)) & 0x01) {\n                    decoded.delay_task[key] = readOnOffStatus((data >> switch_bit_offset[key]) & 0x01);\n                }\n            }\n            offset += 4;\n            break;\n        case 0x23:\n            decoded.cancel_delay_task = readUInt8(bytes[offset]);\n            // ignore the second byte\n            offset += 2;\n            break;\n        case 0x25:\n            var data = readUInt16LE(bytes.slice(offset, offset + 2));\n            decoded.child_lock_config = {};\n            decoded.child_lock_config.enable = readEnableStatus((data >>> 15) & 0x01);\n            decoded.child_lock_config.lock_time = data & 0x7fff;\n            offset += 2;\n            break;\n        case 0x26:\n            decoded.power_consumption_enable = readEnableStatus(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x27:\n            decoded.clear_power_consumption = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x28:\n            decoded.report_status = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x2c:\n            decoded.report_attribute = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x2f:\n            decoded.led_mode = readLedMode(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x5e:\n            decoded.reset_button_enable = readEnableStatus(bytes[offset]);\n            offset += 1;\n            break;\n        default:\n            throw new Error(\"unknown downlink response\");\n    }\n\n    return { data: decoded, offset: offset };\n}\n\nfunction readProtocolVersion(bytes) {\n    var major = (bytes & 0xf0) >> 4;\n    var minor = bytes & 0x0f;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readHardwareVersion(bytes) {\n    var major = (bytes[0] & 0xff).toString(16);\n    var minor = (bytes[1] & 0xff) >> 4;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readFirmwareVersion(bytes) {\n    var major = (bytes[0] & 0xff).toString(16);\n    var minor = (bytes[1] & 0xff).toString(16);\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readTslVersion(bytes) {\n    var major = bytes[0] & 0xff;\n    var minor = bytes[1] & 0xff;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readSerialNumber(bytes) {\n    var temp = [];\n    for (var idx = 0; idx < bytes.length; idx++) {\n        temp.push((\"0\" + (bytes[idx] & 0xff).toString(16)).slice(-2));\n    }\n    return temp.join(\"\");\n}\n\nfunction readLoRaWANClass(type) {\n    var class_map = {\n        0: \"Class A\",\n        1: \"Class B\",\n        2: \"Class C\",\n        3: \"Class CtoB\",\n    };\n    return getValue(class_map, type);\n}\n\nfunction readResetEvent(status) {\n    var status_map = { 0: \"normal\", 1: \"reset\" };\n    return getValue(status_map, status);\n}\n\nfunction readOnOffStatus(status) {\n    var status_map = { 0: \"off\", 1: \"on\" };\n    return getValue(status_map, status);\n}\n\nfunction readYesNoStatus(status) {\n    var status_map = { 0: \"no\", 1: \"yes\" };\n    return getValue(status_map, status);\n}\n\nfunction readLedMode(bytes) {\n    var led_mode_map = { 0: \"off\", 1: \"on_inverted\", 2: \"on_synced\" };\n    return getValue(led_mode_map, bytes);\n}\n\nfunction readEnableStatus(status) {\n    var status_map = { 0: \"disable\", 1: \"enable\" };\n    return getValue(status_map, status);\n}\n\n/* eslint-disable */\nfunction readUInt8(bytes) {\n    return bytes & 0xff;\n}\n\nfunction readInt8(bytes) {\n    var ref = readUInt8(bytes);\n    return ref > 0x7f ? ref - 0x100 : ref;\n}\n\nfunction readUInt16LE(bytes) {\n    var value = (bytes[1] << 8) + bytes[0];\n    return value & 0xffff;\n}\n\nfunction readInt16LE(bytes) {\n    var ref = readUInt16LE(bytes);\n    return ref > 0x7fff ? ref - 0x10000 : ref;\n}\n\nfunction readUInt32LE(bytes) {\n    var value = (bytes[3] << 24) + (bytes[2] << 16) + (bytes[1] << 8) + bytes[0];\n    return (value & 0xffffffff) >>> 0;\n}\n\nfunction readInt32LE(bytes) {\n    var ref = readUInt32LE(bytes);\n    return ref > 0x7fffffff ? ref - 0x100000000 : ref;\n}\n\nfunction getValue(map, key) {\n    if (RAW_VALUE) return key;\n\n    var value = map[key];\n    if (!value) value = \"unknown\";\n    return value;\n}\n\n//if (!Object.assign) {\nObject.defineProperty(Object, \"assign\", {\n    enumerable: false,\n    configurable: true,\n    writable: true,\n    value: function (target) {\n        \"use strict\";\n        if (target == null) {\n            throw new TypeError(\"Cannot convert first argument to object\");\n        }\n\n        var to = Object(target);\n        for (var i = 1; i < arguments.length; i++) {\n            var nextSource = arguments[i];\n            if (nextSource == null) {\n                continue;\n            }\n            nextSource = Object(nextSource);\n\n            var keysArray = Object.keys(Object(nextSource));\n            for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {\n                var nextKey = keysArray[nextIndex];\n                var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);\n                if (desc !== undefined && desc.enumerable) {\n                    // concat array\n                    if (Array.isArray(to[nextKey]) && Array.isArray(nextSource[nextKey])) {\n                        to[nextKey] = to[nextKey].concat(nextSource[nextKey]);\n                    } else {\n                        to[nextKey] = nextSource[nextKey];\n                    }\n                }\n            }\n        }\n        return to;\n    },\n});\n//}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 300,
+        "wires": [
+            [
+                "e7bd24bdb5879c62",
+                "89c2f6cda241c5e3"
+            ]
+        ]
+    },
+    {
+        "id": "e7bd24bdb5879c62",
+        "type": "debug",
+        "z": "2f405e2e605031ab",
+        "name": "WS502_Q1.01.02",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "89c2f6cda241c5e3",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "get_data_WS502",
+        "func": "var p = msg.payload || {};\nvar data = global.get(\"ws502_o20210\") || {};\n\nif (typeof p.active_power === \"number\" && isFinite(p.active_power)) {\n    data.power_lamp = p.active_power;\n}\n\nif (\n    typeof p.power_consumption === \"number\" &&\n    isFinite(p.power_consumption)\n) {\n    data.energy_lamp_wh = p.power_consumption;\n}\n\nglobal.set(\"ws502_o20210\", data);\n\nmsg.payload = {\n    device: \"WS502\",\n    load: \"lamp\",\n    active_power: data.power_lamp,\n    power_consumption: data.energy_lamp_wh\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 300,
+        "wires": [
+            [
+                "f4dab5cfcc14afdf",
+                "o20210_consFromLamp",
+                "o20210_lampReadingFn"
+            ]
+        ]
+    },
+    {
+        "id": "f4dab5cfcc14afdf",
+        "type": "debug",
+        "z": "2f405e2e605031ab",
+        "name": "data_WS502_Q1.01.02",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1030,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "558c9d61503ddea6",
+        "type": "inject",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "on",
+        "payloadType": "str",
+        "x": 750,
+        "y": 760,
+        "wires": [
+            [
+                "39488198e6d14de7"
+            ]
+        ]
+    },
+    {
+        "id": "38d67b8f6a3b8af3",
+        "type": "inject",
+        "z": "2f405e2e605031ab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "off",
+        "payloadType": "str",
+        "x": 750,
+        "y": 820,
+        "wires": [
+            [
+                "f3237f5b3dc379d1"
+            ]
+        ]
+    },
+    {
+        "id": "6c61ab262f24011c",
+        "type": "modbus-client",
+        "name": "USR",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.1.107",
+        "tcpPort": "502",
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": "9600",
+        "serialDatabits": "8",
+        "serialStopbits": "1",
+        "serialParity": "none",
+        "serialConnectionDelay": "100",
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": "1",
+        "commandDelay": "1",
+        "clientTimeout": "1000",
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": "2000",
+        "parallelUnitIdsAllowed": true,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "o20210_toMiniPC",
+        "type": "tcp out",
+        "z": "2f405e2e605031ab",
+        "name": "TCP OUT ke Mini PC (O2.02.10)",
+        "host": "192.168.1.190",
+        "port": "5200",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 1140,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "o20210_acStatusFn",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "patch_ac_status_O2.02.10",
+        "func": "// Ditambahkan: samakan status AC di Web dengan switch ON/OFF ruangan ini\n// (msg.payload di titik ini masih \"on\"/\"off\" dari switch, tidak diubah).\n// UG65 tidak bisa HTTP -- kirim sebagai TCP JSON ke Mini PC untuk diteruskan.\nvar state = msg.payload === \"on\" ? \"active\" : \"idle\";\nmsg.payload = JSON.stringify({\n    method: \"PATCH\",\n    url: \"http://127.0.0.1:5001/api/v1/devices/39/status\",\n    payload: { status: state }\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 640,
+        "wires": [
+            [
+                "o20210_toMiniPC"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_lampStatusFn",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "patch_lamp_status_O2.02.10",
+        "func": "// Ditambahkan: samakan status Lampu di Web dengan switch ON/OFF ruangan ini.\nvar state = msg.payload === \"on\" ? \"active\" : \"idle\";\nmsg.payload = JSON.stringify({\n    method: \"PATCH\",\n    url: \"http://127.0.0.1:5001/api/v1/devices/40/status\",\n    payload: { status: state }\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 670,
+        "wires": [
+            [
+                "o20210_toMiniPC"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_occupancyAutoControl",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "occupancy_auto_control_O2.02.10",
+        "func": "var className = \"O2.02.10\";\nvar now = Date.now();\n\nvar webOverride = global.get(`override_${className}`) || {};\nif (webOverride.active && now < webOverride.until) {\n    return null; // Web/API masih menang, jangan diubah otomasi okupansi.\n}\n\nvar doorWindow = global.get(`door_window_${className}`) || {};\nif (doorWindow.active && now < doorWindow.until) {\n    return null; // Masih dalam 25 menit sejak tap RFID, tetap menyala.\n}\n\nvar occ = msg.payload && msg.payload.occupancy;\nif (occ !== \"occupied\" && occ !== \"vacant\") return null;\n\nmsg.payload = (occ === \"occupied\") ? \"on\" : \"off\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 180,
+        "wires": [
+            [
+                "f6a57804deec1a8a"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_consFromOcc",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "build_consumption_from_occupancy",
+        "func": "// Ditambahkan: kirim occupancy ke Web (POST /api/v1/consumption) lewat Mini PC.\n// Gabungkan dengan power_lamp terakhir yang diketahui (dari get_data_WS502)\n// supaya tidak menimpa nilai power_lamp jadi null di database.\nvar occ = msg.payload && msg.payload.occupancy === \"occupied\" ? 1 : 0;\nvar prev = global.get(\"fip_state_o20210\") || {};\nprev.occupancy = occ;\nglobal.set(\"fip_state_o20210\", prev);\n\nmsg.payload = JSON.stringify({\n    method: \"POST\",\n    url: \"http://127.0.0.1:5001/api/v1/consumption\",\n    payload: { class_code: \"O2.02.10\", occupancy: occ, power_lamp: prev.power_lamp_kw }\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 260,
+        "wires": [
+            [
+                "o20210_toMiniPC"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_consFromLamp",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "build_consumption_from_lamp",
+        "func": "// Ditambahkan: kirim daya lampu (WS502) ke Web lewat Mini PC.\n// Gabungkan dengan occupancy terakhir yang diketahui (dari VS370) supaya\n// tidak menimpa nilai occupancy jadi null di database. active_power dari\n// decoder WS502 satuannya Watt -> dikonversi ke kW.\nvar p = msg.payload || {};\nvar watts = typeof p.active_power === \"number\" ? p.active_power : 0;\nvar kw = watts / 1000;\n\nvar prev = global.get(\"fip_state_o20210\") || {};\nprev.power_lamp_kw = kw;\nglobal.set(\"fip_state_o20210\", prev);\n\nmsg.payload = JSON.stringify({\n    method: \"POST\",\n    url: \"http://127.0.0.1:5001/api/v1/consumption\",\n    payload: { class_code: \"O2.02.10\", power_lamp: kw, occupancy: prev.occupancy }\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 340,
+        "wires": [
+            [
+                "o20210_toMiniPC"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_lampReadingFn",
+        "type": "function",
+        "z": "2f405e2e605031ab",
+        "name": "patch_lamp_reading_O2.02.10",
+        "func": "// Ditambahkan: kirim daya lampu real-time (WS502, Watt->kW) ke Web lewat Mini PC\n// supaya kartu \"Lampu -- Daya Saat Ini\" menampilkan angka sebenarnya, bukan\n// fallback power_rating statis.\nvar p = msg.payload || {};\nvar watts = typeof p.active_power === \"number\" ? p.active_power : 0;\nmsg.payload = JSON.stringify({\n    method: \"PATCH\",\n    url: \"http://127.0.0.1:5001/api/v1/devices/40/reading\",\n    payload: { power: watts / 1000 }\n}) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 400,
+        "wires": [
+            [
+                "o20210_toMiniPC"
+            ]
+        ]
+    }
+]

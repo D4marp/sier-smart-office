@@ -28,7 +28,7 @@ module.exports = {
     },
     {
       name: 'node-red',
-      script: 'C:/Users/FIKK Unesa/AppData/Roaming/npm/node_modules/node-red/red.js',
+      script: 'C:/Users/FIP Unesa/AppData/Roaming/npm/node_modules/node-red/red.js',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

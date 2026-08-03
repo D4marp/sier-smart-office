@@ -49,7 +49,7 @@ Start-Service -Name $serviceName
 Get-Service -Name $serviceName | Format-Table Name, Status, StartType -AutoSize
 
 Write-Host "4) Daftarkan Scheduled Task PM2 (backend+frontend) saat login..." -ForegroundColor Cyan
-$vbsPath = "C:\Users\FIKK Unesa\Downloads\unesa-psikologi-main\unesa-psikologi-main\start-all.vbs"
+$vbsPath = "C:\Users\FIP Unesa\unesa-psikologi\start-all.vbs"
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsPath`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn
 Register-ScheduledTask -TaskName "SmartEnergyDashboard-AutoStart" -Action $action -Trigger $trigger `

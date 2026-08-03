@@ -1,0 +1,434 @@
+[
+    {
+        "id": "fip_control_hub_tab",
+        "type": "tab",
+        "label": "FIP Control Hub (AC/Lampu)",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "hub_httpReq",
+        "type": "http request",
+        "z": "fip_control_hub_tab",
+        "name": "HTTP request ke Web (dari telemetri UG65)",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": true,
+        "headers": [],
+        "x": 1000,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "hub_httpCatch",
+        "type": "catch",
+        "z": "fip_control_hub_tab",
+        "name": "catch_httpReq_hub",
+        "scope": [
+            "hub_httpReq"
+        ],
+        "uncaught": false,
+        "x": 1000,
+        "y": 440,
+        "wires": [
+            [
+                "hub_httpRetryFn"
+            ]
+        ]
+    },
+    {
+        "id": "hub_httpRetryFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "retry_or_drop_hub",
+        "func": "// Web API sesekali sempat tidak terjangkau sesaat. Coba lagi otomatis\n// (maks 3x, jeda 2 detik) sebelum menyerah diam-diam.\nmsg._retryCount = (msg._retryCount || 0) + 1;\nif (msg._retryCount > 3) {\n    node.warn(\"Web API tidak terjangkau setelah 3x percobaan (control-hub): \" + (msg.error && msg.error.message));\n    return null;\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1000,
+        "y": 480,
+        "wires": [
+            [
+                "hub_httpRetryDelay"
+            ]
+        ]
+    },
+    {
+        "id": "hub_httpRetryDelay",
+        "type": "delay",
+        "z": "fip_control_hub_tab",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 1000,
+        "y": 520,
+        "wires": [
+            [
+                "hub_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "hub_controlTcpIn",
+        "type": "tcp in",
+        "z": "fip_control_hub_tab",
+        "name": "TCP IN Kontrol ON/OFF (semua ruangan)",
+        "server": "server",
+        "host": "",
+        "port": "5100",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 280,
+        "y": 120,
+        "wires": [
+            [
+                "hub_controlJson"
+            ]
+        ]
+    },
+    {
+        "id": "hub_controlJson",
+        "type": "json",
+        "z": "fip_control_hub_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 460,
+        "y": 120,
+        "wires": [
+            [
+                "hub_controlRouteFn"
+            ]
+        ]
+    },
+    {
+        "id": "hub_controlRouteFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "route_control_by_classKey",
+        "func": "// Terima {classKey, state, source} dari backend ATAU dari FIP-ACCESS-CONTROL\n// (tap RFID, source:\"door_access\"), validasi, siapkan msg.topic = classKey\n// supaya switch bisa memilih ruangan yang benar. \"source\" diteruskan apa\n// adanya ke UG65 -- manual_override di sana pakai ini untuk membedakan\n// jendela 25 menit (tap pintu) vs 30 menit (perintah Web/API).\nvar p = msg.payload || {};\nvar classKey = p.classKey;\nvar state = String(p.state || '').toLowerCase();\nvar source = p.source || 'web_api';\n\nif (!classKey || ![\"on\", \"off\"].includes(state)) {\n    node.warn(\"Payload kontrol tidak valid: \" + JSON.stringify(p));\n    return null;\n}\n\nmsg.topic = classKey;\nmsg.payload = state;\nmsg._source = source;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 120,
+        "wires": [
+            [
+                "hub_controlSwitch"
+            ]
+        ]
+    },
+    {
+        "id": "hub_controlSwitch",
+        "type": "switch",
+        "z": "fip_control_hub_tab",
+        "name": "Pilih ruangan (classKey)",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "o20210",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "o20211",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "o20212",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "o20213",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "o20214",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 5,
+        "x": 840,
+        "y": 120,
+        "wires": [
+            [
+                "o20210_buildStateFn"
+            ],
+            [
+                "o20211_buildStateFn"
+            ],
+            [
+                "o20212_buildStateFn"
+            ],
+            [
+                "o20213_buildStateFn"
+            ],
+            [
+                "o20214_buildStateFn"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_buildStateFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "build_state_json_O2.02.10",
+        "func": "// manual_override di UG65 (O2.02.1X-COLLECTOR.json) baca msg.payload.state\n// (dan msg.payload.source) setelah JSON parse, jadi bungkus dulu di sini.\nmsg.payload = JSON.stringify({ state: msg.payload, source: msg._source }) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 120,
+        "wires": [
+            [
+                "o20210_toUG65"
+            ]
+        ]
+    },
+    {
+        "id": "o20210_toUG65",
+        "type": "tcp out",
+        "z": "fip_control_hub_tab",
+        "name": "TCP OUT ke UG65 (O2.02.10)",
+        "host": "192.168.1.150",
+        "port": "5110",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 1220,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "o20211_buildStateFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "build_state_json_O2.02.11",
+        "func": "// manual_override di UG65 (O2.02.1X-COLLECTOR.json) baca msg.payload.state\n// (dan msg.payload.source) setelah JSON parse, jadi bungkus dulu di sini.\nmsg.payload = JSON.stringify({ state: msg.payload, source: msg._source }) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 160,
+        "wires": [
+            [
+                "o20211_toUG65"
+            ]
+        ]
+    },
+    {
+        "id": "o20211_toUG65",
+        "type": "tcp out",
+        "z": "fip_control_hub_tab",
+        "name": "TCP OUT ke UG65 (O2.02.11)",
+        "host": "192.168.1.150",
+        "port": "5111",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 1220,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "o20212_buildStateFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "build_state_json_O2.02.12",
+        "func": "// manual_override di UG65 (O2.02.1X-COLLECTOR.json) baca msg.payload.state\n// (dan msg.payload.source) setelah JSON parse, jadi bungkus dulu di sini.\nmsg.payload = JSON.stringify({ state: msg.payload, source: msg._source }) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 200,
+        "wires": [
+            [
+                "o20212_toUG65"
+            ]
+        ]
+    },
+    {
+        "id": "o20212_toUG65",
+        "type": "tcp out",
+        "z": "fip_control_hub_tab",
+        "name": "TCP OUT ke UG65 (O2.02.12)",
+        "host": "192.168.1.150",
+        "port": "5112",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 1220,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "o20213_buildStateFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "build_state_json_O2.02.13",
+        "func": "// manual_override di UG65 (O2.02.1X-COLLECTOR.json) baca msg.payload.state\n// (dan msg.payload.source) setelah JSON parse, jadi bungkus dulu di sini.\nmsg.payload = JSON.stringify({ state: msg.payload, source: msg._source }) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 240,
+        "wires": [
+            [
+                "o20213_toUG65"
+            ]
+        ]
+    },
+    {
+        "id": "o20213_toUG65",
+        "type": "tcp out",
+        "z": "fip_control_hub_tab",
+        "name": "TCP OUT ke UG65 (O2.02.13)",
+        "host": "192.168.1.150",
+        "port": "5113",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 1220,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "o20214_buildStateFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "build_state_json_O2.02.14",
+        "func": "// manual_override di UG65 (O2.02.1X-COLLECTOR.json) baca msg.payload.state\n// (dan msg.payload.source) setelah JSON parse, jadi bungkus dulu di sini.\nmsg.payload = JSON.stringify({ state: msg.payload, source: msg._source }) + \"\\n\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 280,
+        "wires": [
+            [
+                "o20214_toUG65"
+            ]
+        ]
+    },
+    {
+        "id": "o20214_toUG65",
+        "type": "tcp out",
+        "z": "fip_control_hub_tab",
+        "name": "TCP OUT ke UG65 (O2.02.14)",
+        "host": "192.168.1.150",
+        "port": "5114",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 1220,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "hub_telemetryTcpIn",
+        "type": "tcp in",
+        "z": "fip_control_hub_tab",
+        "name": "TCP IN Telemetri dari UG65",
+        "server": "server",
+        "host": "",
+        "port": "5200",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 280,
+        "y": 340,
+        "wires": [
+            [
+                "hub_telemetryJson"
+            ]
+        ]
+    },
+    {
+        "id": "hub_telemetryJson",
+        "type": "json",
+        "z": "fip_control_hub_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 460,
+        "y": 340,
+        "wires": [
+            [
+                "hub_telemetryFn"
+            ]
+        ]
+    },
+    {
+        "id": "hub_telemetryFn",
+        "type": "function",
+        "z": "fip_control_hub_tab",
+        "name": "forward_telemetry_to_web",
+        "func": "// UG65 tidak bisa HTTP -- kirim {method, url, payload} lewat TCP ke sini,\n// Mini PC yang benar-benar memanggil Web.\nvar p = msg.payload || {};\nif (!p.method || !p.url) {\n    node.warn(\"Payload telemetri tidak valid: \" + JSON.stringify(p));\n    return null;\n}\nmsg.method = p.method;\nmsg.url = p.url;\nmsg.payload = p.payload;\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 340,
+        "wires": [
+            [
+                "hub_httpReq"
+            ]
+        ]
+    }
+]

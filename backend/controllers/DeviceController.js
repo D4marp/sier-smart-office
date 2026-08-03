@@ -43,7 +43,19 @@ const TARGETS = {
       i30202: 6002,
       i30203: 6003,
       i30204: 6004,
-      i30205: 6005
+      i30205: 6005,
+      // FIP — Umum Fakultas: SATU switch gabungan AC+Lampu per ruangan.
+      // Semua 5 ruangan mengarah ke SATU port terpusat (5100) di flow
+      // FIP-ACCESS-CONTROL.json (bukan port per-ruangan lagi -- port
+      // terpisah per tab sempat gagal deploy berulang). Flow itu meneruskan
+      // ke ruangan yang benar berdasarkan field "classKey" di payload TCP
+      // (sudah otomatis disertakan oleh sendTcpCommand di bawah) lewat
+      // link out/link in internal Node-RED ke O2.02.1X-COLLECTOR.json.
+      o20210: { host: MINI_PC_NODE_RED_HOST, port: 5100 },
+      o20211: { host: MINI_PC_NODE_RED_HOST, port: 5100 },
+      o20212: { host: MINI_PC_NODE_RED_HOST, port: 5100 },
+      o20213: { host: MINI_PC_NODE_RED_HOST, port: 5100 },
+      o20214: { host: MINI_PC_NODE_RED_HOST, port: 5100 }
     }
   },
   lamp1: {
@@ -101,7 +113,14 @@ const TARGETS = {
       i30202: 5202,
       i30203: 5203,
       i30204: 5204,
-      i30205: 5205
+      i30205: 5205,
+      // FIP — Umum Fakultas: sama seperti TARGETS.lamp di atas, satu port
+      // terpusat 5100 di FIP-ACCESS-CONTROL.json untuk kelima ruangan.
+      o20210: 5100,
+      o20211: 5100,
+      o20212: 5100,
+      o20213: 5100,
+      o20214: 5100
     }
   },
   ac1: {

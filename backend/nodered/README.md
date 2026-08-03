@@ -173,6 +173,16 @@ Lihat [docs/fikk-nodered-integration.md](../../docs/fikk-nodered-integration.md)
 project — arsitekturnya beda dari Q1.01.02 dan FISIPOL: gateway UG65 (Milesight, LoRaWAN)
 terpisah dari Mini PC, jadi ada dua repo flow Node-RED (UG65 + Mini PC) alih-alih satu.
 
+### FIP (O2.02.10 s/d O2.02.14)
+
+Lihat [docs/fip-nodered-integration.md](../../docs/fip-nodered-integration.md) di root
+project — pola sama seperti FIKK (UG65 + Mini PC terpisah, UG65 cuma bisa TCP tidak bisa
+HTTP), plus otomasi tambahan: tap RFID (Hikvision) menyalakan AC+Lampu 25 menit, lalu
+kendali diambil alih sensor okupansi VS370, dengan tombol Web tetap menang mutlak 30 menit
+kapan pun dipakai. File flow: `O2.02.1X-COLLECTOR.json` (5x, UG65),
+`FIP-ACCESS-CONTROL.json` (Hikvision, Mini PC), `FIP-CONTROL-HUB.json` (API AC/Lampu +
+relay telemetri, Mini PC).
+
 ---
 
 ## 📚 Next Steps
