@@ -140,7 +140,7 @@
         "port": "5400",
         "datamode": "stream",
         "datatype": "utf8",
-        "newline": "",
+        "newline": "\\n",
         "topic": "",
         "trim": false,
         "base64": false,

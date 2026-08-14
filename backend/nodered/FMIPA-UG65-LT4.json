@@ -27,7 +27,7 @@
         "port": "5300",
         "datamode": "stream",
         "datatype": "utf8",
-        "newline": "",
+        "newline": "\\n",
         "topic": "",
         "trim": false,
         "base64": false,
