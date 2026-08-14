@@ -1,0 +1,392 @@
+[
+    {
+        "id": "fmipa_access_tab",
+        "type": "tab",
+        "label": "FMIPA Access Control (Hikvision)",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fmipa_access_todoComment",
+        "type": "comment",
+        "z": "fmipa_access_tab",
+        "name": "TODO / ASUMSI sebelum deploy",
+        "info": "1. host di tiap node \"AccessControl-config\" sudah diisi IP asli (dari\n   network scan user + verifikasi ISAPI 401 di sisi kita -- signature\n   khas Hikvision, bukan tebakan). SATU HAL BELUM PASTI: user menulis\n   ruangan \"C14.04.03\" untuk IP 192.168.137.50, padahal ruangan itu\n   TIDAK ADA di data EUI LoRaWAN (yang ada: .02/.05/.08/.09) -- flow\n   ini MENGASUMSIKAN itu typo untuk \"C14.04.02\" (satu-satunya ruangan\n   yang belum kebagian IP). WAJIB dikonfirmasi ulang ke user sebelum\n   demo -- kalau ternyata IP-nya untuk ruangan lain, tap kartu di\n   C14.04.02 akan menyalakan ruangan yang salah.\n2. Butuh npm package \"node-red-contrib-hikvision-ultimate\" ter-install\n   di Node-RED Mini PC (lihat node global-config di bawah) supaya node\n   type \"hikvisionUltimateAccessControlTerminal\"/\"AccessControl-config\"\n   dikenali saat import.\n3. Major 5 / Minor 1 (event code \"verifikasi akses berhasil\") diambil\n   dari flow FIP yang sudah terbukti jalan dengan model terminal sama\n   (DS-K1T342MFX) -- aman dipakai ulang kalau modelnya sama, tapi cek\n   lagi kalau model FMIPA ternyata beda.\n4. Tap RFID sukses -> POST http://127.0.0.1:1880/api/<classKey>\n   {state:\"on\", source:\"door_access\"} -- masuk ke endpoint yang SAMA\n   dengan FMIPA-CONTROL-HUB.json (beda dari FIP yang pakai TCP port\n   5100, karena hub FMIPA memang berbasis HTTP, bukan TCP). UG65 yang\n   menerimanya lewat manual_override_shared akan set door_window_\n   <classKey> (25 menit, tidak ikut otomasi okupansi) -- lihat\n   FMIPA-UG65-LT4.json/FMIPA-UG65-LT2.json.",
+        "x": 300,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "fmipa_access_globalConfig",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-hikvision-ultimate": "1.4.1"
+        }
+    },
+    {
+        "id": "fmipa_access_doorTriggerShared",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "build_door_trigger_shared",
+        "func": "// Tap RFID (akses berhasil) -> nyalakan semua unit ruangan ini lewat\n// endpoint HTTP yang sama dipakai backend (FMIPA-CONTROL-HUB.json),\n// source \"door_access\" supaya UG65 tahu ini trigger pintu (jendela 25\n// menit), bukan perintah Web biasa (30 menit).\nvar classKey = msg.classKey;\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:1880/api/\" + classKey;\nmsg.payload = { state: \"on\", source: \"door_access\" };\nmsg.headers = { \"content-type\": \"application/json\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 160,
+        "wires": [
+            [
+                "fmipa_access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_access_alertShared",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "build_access_alert_shared",
+        "func": "// Kirim event akses (Major 5/Minor 1 = verifikasi sukses) ke Web sebagai alert.\n// X-Tenant WAJIB -- panggilan ini langsung ke backend (bukan lewat hub),\n// tanpa header ini resolveTenant() jatuh ke DEFAULT_TENANT fakultas lain.\nvar classCode = msg.classCode || msg.classKey;\nvar p = msg.payload || {};\n\nmsg.method = \"POST\";\nmsg.url = \"http://127.0.0.1:5001/api/v1/alerts/device-event\";\nmsg.payload = Object.assign({}, p, {\n    eventDescription: p.eventDescription || \"Akses berhasil (Major 5 / Minor 1)\",\n    doorNo: p.doorNo,\n    serialNo: p.serialNo,\n    currentVerifyMode: p.currentVerifyMode,\n    time: p.time || new Date().toISOString(),\n    room: classCode,\n    source: \"FMIPA-ACCESS-CONTROL.\" + classCode\n});\nmsg.headers = { \"content-type\": \"application/json\", \"x-tenant\": \"fmipa\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 220,
+        "wires": [
+            [
+                "fmipa_access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_access_httpReq",
+        "type": "http request",
+        "z": "fmipa_access_tab",
+        "name": "HTTP request (door trigger + Web alert)",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": true,
+        "headers": [],
+        "x": 960,
+        "y": 190,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fmipa_access_httpCatch",
+        "type": "catch",
+        "z": "fmipa_access_tab",
+        "name": "catch_httpReq_access",
+        "scope": [
+            "fmipa_access_httpReq"
+        ],
+        "uncaught": false,
+        "x": 960,
+        "y": 240,
+        "wires": [
+            [
+                "fmipa_access_httpRetryFn"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_access_httpRetryFn",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "retry_or_drop_access",
+        "func": "// Web/Node-RED sesekali sempat tidak terjangkau sesaat. Coba lagi\n// otomatis (maks 3x, jeda 2 detik) sebelum menyerah diam-diam.\nmsg._retryCount = (msg._retryCount || 0) + 1;\nif (msg._retryCount > 3) {\n    node.warn(\"Tidak terjangkau setelah 3x percobaan (access-control): \" + (msg.error && msg.error.message));\n    return null;\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 280,
+        "wires": [
+            [
+                "fmipa_access_httpRetryDelay"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_access_httpRetryDelay",
+        "type": "delay",
+        "z": "fmipa_access_tab",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 960,
+        "y": 320,
+        "wires": [
+            [
+                "fmipa_access_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "c140402_accessConfig",
+        "type": "AccessControl-config",
+        "host": "192.168.137.50",
+        "port": 80,
+        "name": "C14.04.02 Access",
+        "protocol": "http",
+        "deviceinfo": "",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "c140402_accessTerminal",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "fmipa_access_tab",
+        "name": "C14.04.02 Access",
+        "topic": "K1T342MFX",
+        "server": "c140402_accessConfig",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 220,
+        "y": 60,
+        "wires": [
+            [
+                "c140402_checkAndTag"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c140402_checkAndTag",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "check_access_granted_and_tag (C14.04.02)",
+        "func": "// Terminal ini sudah di-filter Major 5 di node config-nya, tapi Minor\n// perlu dicek manual di sini (samakan dengan pola Major5+Minor1 = \n// \"verifikasi akses berhasil\" yang dipakai flow FIP).\nvar p = msg.payload || {};\nif (String(p.major) !== \"5\" || String(p.minor) !== \"1\") return null;\n\nmsg.classKey = \"c140402\";\nmsg.classCode = \"C14.04.02\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 60,
+        "wires": [
+            [
+                "fmipa_access_doorTriggerShared",
+                "fmipa_access_alertShared"
+            ]
+        ]
+    },
+    {
+        "id": "c140405_accessConfig",
+        "type": "AccessControl-config",
+        "host": "192.168.137.14",
+        "port": 80,
+        "name": "C14.04.05 Access",
+        "protocol": "http",
+        "deviceinfo": "",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "c140405_accessTerminal",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "fmipa_access_tab",
+        "name": "C14.04.05 Access",
+        "topic": "K1T342MFX",
+        "server": "c140405_accessConfig",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 220,
+        "y": 160,
+        "wires": [
+            [
+                "c140405_checkAndTag"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c140405_checkAndTag",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "check_access_granted_and_tag (C14.04.05)",
+        "func": "// Terminal ini sudah di-filter Major 5 di node config-nya, tapi Minor\n// perlu dicek manual di sini (samakan dengan pola Major5+Minor1 = \n// \"verifikasi akses berhasil\" yang dipakai flow FIP).\nvar p = msg.payload || {};\nif (String(p.major) !== \"5\" || String(p.minor) !== \"1\") return null;\n\nmsg.classKey = \"c140405\";\nmsg.classCode = \"C14.04.05\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 160,
+        "wires": [
+            [
+                "fmipa_access_doorTriggerShared",
+                "fmipa_access_alertShared"
+            ]
+        ]
+    },
+    {
+        "id": "c140408_accessConfig",
+        "type": "AccessControl-config",
+        "host": "192.168.137.162",
+        "port": 80,
+        "name": "C14.04.08 Access",
+        "protocol": "http",
+        "deviceinfo": "",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "c140408_accessTerminal",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "fmipa_access_tab",
+        "name": "C14.04.08 Access",
+        "topic": "K1T342MFX",
+        "server": "c140408_accessConfig",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 220,
+        "y": 260,
+        "wires": [
+            [
+                "c140408_checkAndTag"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c140408_checkAndTag",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "check_access_granted_and_tag (C14.04.08)",
+        "func": "// Terminal ini sudah di-filter Major 5 di node config-nya, tapi Minor\n// perlu dicek manual di sini (samakan dengan pola Major5+Minor1 = \n// \"verifikasi akses berhasil\" yang dipakai flow FIP).\nvar p = msg.payload || {};\nif (String(p.major) !== \"5\" || String(p.minor) !== \"1\") return null;\n\nmsg.classKey = \"c140408\";\nmsg.classCode = \"C14.04.08\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 260,
+        "wires": [
+            [
+                "fmipa_access_doorTriggerShared",
+                "fmipa_access_alertShared"
+            ]
+        ]
+    },
+    {
+        "id": "c140409_accessConfig",
+        "type": "AccessControl-config",
+        "host": "192.168.137.38",
+        "port": 80,
+        "name": "C14.04.09 Access",
+        "protocol": "http",
+        "deviceinfo": "",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "c140409_accessTerminal",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "fmipa_access_tab",
+        "name": "C14.04.09 Access",
+        "topic": "K1T342MFX",
+        "server": "c140409_accessConfig",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 220,
+        "y": 360,
+        "wires": [
+            [
+                "c140409_checkAndTag"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c140409_checkAndTag",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "check_access_granted_and_tag (C14.04.09)",
+        "func": "// Terminal ini sudah di-filter Major 5 di node config-nya, tapi Minor\n// perlu dicek manual di sini (samakan dengan pola Major5+Minor1 = \n// \"verifikasi akses berhasil\" yang dipakai flow FIP).\nvar p = msg.payload || {};\nif (String(p.major) !== \"5\" || String(p.minor) !== \"1\") return null;\n\nmsg.classKey = \"c140409\";\nmsg.classCode = \"C14.04.09\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 360,
+        "wires": [
+            [
+                "fmipa_access_doorTriggerShared",
+                "fmipa_access_alertShared"
+            ]
+        ]
+    },
+    {
+        "id": "c140203_accessConfig",
+        "type": "AccessControl-config",
+        "host": "192.168.137.25",
+        "port": 80,
+        "name": "C14.02.03 Access",
+        "protocol": "http",
+        "deviceinfo": "",
+        "authentication": "digest",
+        "debuglevel": "no"
+    },
+    {
+        "id": "c140203_accessTerminal",
+        "type": "hikvisionUltimateAccessControlTerminal",
+        "z": "fmipa_access_tab",
+        "name": "C14.02.03 Access",
+        "topic": "K1T342MFX",
+        "server": "c140203_accessConfig",
+        "filtermajorevent": "5",
+        "filterminorevent": "0",
+        "x": 220,
+        "y": 460,
+        "wires": [
+            [
+                "c140203_checkAndTag"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c140203_checkAndTag",
+        "type": "function",
+        "z": "fmipa_access_tab",
+        "name": "check_access_granted_and_tag (C14.02.03)",
+        "func": "// Terminal ini sudah di-filter Major 5 di node config-nya, tapi Minor\n// perlu dicek manual di sini (samakan dengan pola Major5+Minor1 = \n// \"verifikasi akses berhasil\" yang dipakai flow FIP).\nvar p = msg.payload || {};\nif (String(p.major) !== \"5\" || String(p.minor) !== \"1\") return null;\n\nmsg.classKey = \"c140203\";\nmsg.classCode = \"C14.02.03\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 460,
+        "wires": [
+            [
+                "fmipa_access_doorTriggerShared",
+                "fmipa_access_alertShared"
+            ]
+        ]
+    }
+]

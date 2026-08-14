@@ -1,0 +1,272 @@
+[
+    {
+        "id": "fmipa_hub_tab",
+        "type": "tab",
+        "label": "FMIPA Control Hub (Mini PC)",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fmipa_hub_todoComment",
+        "type": "comment",
+        "z": "fmipa_hub_tab",
+        "name": "TODO / ASUMSI sebelum deploy",
+        "info": "1. host tcp-out ke tiap UG65 di bawah -- ASUMSI mengikuti pola FIP (satu\n   IP dipakai untuk semua layanan UG65: admin, Node-RED, TCP override).\n   BELUM diverifikasi Node-RED-nya jalan di IP+path yang sama. Cek dulu\n   https://<ip>/node-red/ bisa diakses sebelum deploy.\n2. Backend .env di Mini PC ini WAJIB set NODERED_BASE_URL=http://127.0.0.1:1880\n   (default-nya menunjuk ke Mini PC fakultas lain, 10.12.1.150) supaya\n   controlViaNodeRed() fallback HTTP memanggil Node-RED yang benar.\n3. classKey FMIPA (c140402, dst.) SENGAJA tidak didaftarkan di TARGETS\n   backend/controllers/DeviceController.js -- ikut pola FIKK, otomatis\n   jatuh ke fallback HTTP ini. Tidak perlu ubah kode backend.\n4. Menambah ruangan baru cukup tambah 1 baris di ROOM_TO_UG (function\n   parse_control_request) -- tidak perlu node baru di hub ini. Node\n   baru hanya perlu ditambah di sisi UG65 (switch_by_unitstate + 8\n   LoRa Output leaf untuk ruangan itu).",
+        "x": 300,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "fmipa_hub_httpIn",
+        "type": "http in",
+        "z": "fmipa_hub_tab",
+        "name": "HTTP IN Kontrol ON/OFF (/api/:classKey)",
+        "url": "/api/:classKey",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 300,
+        "y": 140,
+        "wires": [
+            [
+                "fmipa_hub_parseFn"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_parseFn",
+        "type": "function",
+        "z": "fmipa_hub_tab",
+        "name": "parse_control_request",
+        "func": "// Dipanggil backend lewat fallback getNodeRedClassEndpointUrl():\n// POST http://<NODERED_BASE_URL>/api/<classKey>  { state, unit? }\n// classKey datang dari URL path (:classKey). ROOM_TO_UG menentukan UG65\n// mana yang menangani ruangan itu -- satu-satunya tempat yang perlu\n// diedit kalau ada ruangan baru.\nvar ROOM_TO_UG = {\n    \"c140402\": \"LT4\",\n    \"c140405\": \"LT4\",\n    \"c140408\": \"LT4\",\n    \"c140409\": \"LT4\",\n    \"c140203\": \"LT2\"\n};\n\nvar classKey = String((msg.req && msg.req.params && msg.req.params.classKey) || \"\").toLowerCase();\nvar body = msg.payload || {};\nvar state = String(body.state || \"\").toLowerCase();\nvar unit = body.unit; // mis. \"WS523_A\", \"WS502_B\" -- kosong = semua unit ruangan itu\nvar ug = ROOM_TO_UG[classKey];\n\n// PENTING: pakai `msg` ASLI (bukan objek baru) untuk balasan http response --\n// msg.req/msg.res/msg._msgid yang dilekatkan node \"http in\" cuma ada di msg\n// ini. Kalau diganti objek baru, node \"http response\" tidak tahu koneksi\n// mana yang harus dibalas dan client akan menggantung sampai timeout.\nif (!classKey || !ug || [\"on\", \"off\"].indexOf(state) === -1) {\n    msg.statusCode = 400;\n    msg.payload = { success: false, message: \"classKey/state tidak valid atau ruangan tidak dikenal: \" + JSON.stringify(body) };\n    return [null, msg];\n}\n\nvar routeMsg = {\n    topic: ug,\n    payload: JSON.stringify({ classKey: classKey, state: state, unit: unit, source: body.source || \"web_api\" }) + \"\\n\"\n};\nmsg.statusCode = 200;\nmsg.payload = { success: true, message: \"Perintah \" + state.toUpperCase() + \" diteruskan ke \" + ug + \" (\" + classKey + (unit ? \", unit \" + unit : \"\") + \")\" };\nreturn [routeMsg, msg];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 140,
+        "wires": [
+            [
+                "fmipa_hub_ugSwitch"
+            ],
+            [
+                "fmipa_hub_httpResponse"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_httpResponse",
+        "type": "http response",
+        "z": "fmipa_hub_tab",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 820,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "fmipa_hub_ugSwitch",
+        "type": "switch",
+        "z": "fmipa_hub_tab",
+        "name": "Pilih UG65 tujuan",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "LT4",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "LT2",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 560,
+        "y": 100,
+        "wires": [
+            [
+                "fmipa_hub_toUG_LT4"
+            ],
+            [
+                "fmipa_hub_toUG_LT2"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_toUG_LT4",
+        "type": "tcp out",
+        "z": "fmipa_hub_tab",
+        "name": "TCP OUT ke UG65 LT4 (192.168.137.245:5300)",
+        "host": "192.168.137.245",
+        "port": "5300",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 820,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "fmipa_hub_toUG_LT2",
+        "type": "tcp out",
+        "z": "fmipa_hub_tab",
+        "name": "TCP OUT ke UG65 LT2 (192.168.137.163:5300)",
+        "host": "192.168.137.163",
+        "port": "5300",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "",
+        "x": 820,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "fmipa_hub_telemetryTcpIn",
+        "type": "tcp in",
+        "z": "fmipa_hub_tab",
+        "name": "TCP IN Telemetri dari UG65 (semua gateway)",
+        "server": "server",
+        "host": "",
+        "port": "5400",
+        "datamode": "stream",
+        "datatype": "utf8",
+        "newline": "",
+        "topic": "",
+        "trim": false,
+        "base64": false,
+        "tls": "",
+        "x": 300,
+        "y": 340,
+        "wires": [
+            [
+                "fmipa_hub_telemetryJson"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_telemetryJson",
+        "type": "json",
+        "z": "fmipa_hub_tab",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 480,
+        "y": 340,
+        "wires": [
+            [
+                "fmipa_hub_telemetryFn"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_telemetryFn",
+        "type": "function",
+        "z": "fmipa_hub_tab",
+        "name": "forward_telemetry_to_web",
+        "func": "// UG65 tidak bisa HTTP -- kirim {method, url, payload} lewat TCP ke sini,\n// Mini PC yang benar-benar memanggil Web (backend lokal :5001).\n// X-Tenant WAJIB disertakan -- tanpa ini resolveTenant() di backend\n// jatuh ke DEFAULT_TENANT (fakultas lain di .env) dan device/class FMIPA\n// tidak ketemu (\"Device not found\") walau request-nya sendiri sukses.\nvar p = msg.payload || {};\nif (!p.method || !p.url) {\n    node.warn(\"Payload telemetri tidak valid: \" + JSON.stringify(p));\n    return null;\n}\nmsg.method = p.method;\nmsg.url = p.url;\nmsg.payload = p.payload;\nmsg.headers = { \"content-type\": \"application/json\", \"x-tenant\": \"fmipa\" };\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 340,
+        "wires": [
+            [
+                "fmipa_hub_httpReq"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_httpReq",
+        "type": "http request",
+        "z": "fmipa_hub_tab",
+        "name": "HTTP request ke Web (dari telemetri UG65)",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": true,
+        "headers": [],
+        "x": 940,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fmipa_hub_httpCatch",
+        "type": "catch",
+        "z": "fmipa_hub_tab",
+        "name": "catch_httpReq_hub",
+        "scope": [
+            "fmipa_hub_httpReq"
+        ],
+        "uncaught": false,
+        "x": 940,
+        "y": 380,
+        "wires": [
+            [
+                "fmipa_hub_httpRetryFn"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_httpRetryFn",
+        "type": "function",
+        "z": "fmipa_hub_tab",
+        "name": "retry_or_drop_hub",
+        "func": "// Web API sesekali sempat tidak terjangkau sesaat. Coba lagi otomatis\n// (maks 3x, jeda 2 detik) sebelum menyerah diam-diam.\nmsg._retryCount = (msg._retryCount || 0) + 1;\nif (msg._retryCount > 3) {\n    node.warn(\"Web API tidak terjangkau setelah 3x percobaan (control-hub): \" + (msg.error && msg.error.message));\n    return null;\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 420,
+        "wires": [
+            [
+                "fmipa_hub_httpRetryDelay"
+            ]
+        ]
+    },
+    {
+        "id": "fmipa_hub_httpRetryDelay",
+        "type": "delay",
+        "z": "fmipa_hub_tab",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 940,
+        "y": 460,
+        "wires": [
+            [
+                "fmipa_hub_httpReq"
+            ]
+        ]
+    }
+]
