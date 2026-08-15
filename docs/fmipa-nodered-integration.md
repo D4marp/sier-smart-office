@@ -97,13 +97,34 @@ sesungguhnya**. Sebelum dipakai produksi, checklist ini WAJIB diselesaikan:
       diisi `NODERED_BASE_URL=http://127.0.0.1:1880` (asumsi backend & Node-RED
       Mini PC jalan di mesin yang sama) supaya `controlViaNodeRed()` di
       `backend/controllers/DeviceController.js` memanggil Node-RED yang benar.
-- [ ] **`classes`/`devices` untuk FMIPA belum tentu ada di database** —
-      tenant `fmipa` sudah terdaftar (`backend/scripts/seed_unesa_faculties.js`),
-      tapi baris `classes` (5 ruangan di atas) dan `devices` (2 AC + 2
-      lampu per ruangan, `device_name` **harus** diakhiri `-A`/`-B` supaya
-      cocok dengan regex unit di `controlViaNodeRed`) perlu di-seed manual.
-      Tanpa ini, dashboard tidak akan menampilkan ruangan/perangkat FMIPA
-      sama sekali walau flow Node-RED-nya sudah jalan.
+- [x] **`classes`/`devices` FMIPA sudah di-seed** — `backend/database/seed_fmipa.sql`
+      (5 ruangan, 25 device, `device_name` diakhiri `-A`/`-B` sesuai regex
+      unit di `controlViaNodeRed`). Device ID asli dari seed ini juga sudah
+      dipakai di `ROOM_DEVICE_IDS` pada `build_device_status_patch_shared`
+      dan `get_data_WS502_A` (lihat poin "Daya real-time" di bawah).
+- [x] **`X-Tenant` header di semua panggilan Node-RED → backend** — awalnya
+      hilang, menyebabkan `resolveTenant()` backend jatuh ke
+      `DEFAULT_TENANT` (fakultas lain di `.env`) dan semua PATCH/POST
+      (status, reading, consumption, alert) gagal diam-diam dengan pesan
+      "Device not found" walau request-nya sendiri sukses terkirim.
+      Sudah ditambahkan `"x-tenant": "fmipa"` di `forward_telemetry_to_web`
+      (hub, dipakai semua telemetri UG65) dan `build_access_alert_shared`
+      (access control). Diverifikasi langsung lewat simulasi TCP ke
+      Mini PC — device status & reading benar-benar ter-update di DB
+      setelah fix, gagal sebelum fix.
+- [x] **Daya real-time ("Lampu — Daya Saat Ini") sekarang di-PATCH** —
+      sebelumnya flow FMIPA cuma POST `/api/v1/consumption` (histori/grafik
+      7 hari), TIDAK PATCH `/api/v1/devices/:id/reading` (real-time,
+      dipakai kartu KPI & tabel status). Tanpa `/reading`, frontend
+      (`src/app/fakultas/[code]/page.tsx`) fallback ke `power_rating`
+      statis (3.0 kW AC / 1.6 kW lampu) tiap device berstatus `active` --
+      **bukan** daya sungguhan. Sekarang `get_data_WS502_A (shared)` juga
+      mengirim PATCH reading untuk WS502_A tiap uplink, pakai device ID
+      asli dari `ROOM_DEVICE_IDS` (pola sama seperti
+      `patch_lamp_reading_O2.02.10` di FIP). **AC (WS523) masih belum**
+      karena belum ada decoder WS523 terverifikasi -- lihat poin
+      "Telemetri WS502_B, WS523_A/B belum di-decode" di bawah, gap yang
+      sama, belum berubah.
 - [ ] **UG65 LT2 baru ada 1 ruangan** (C14.02.03) — kalau ada ruangan lain
       di lantai itu yang menyusul didaftarkan, ikuti langkah "Kenapa 1 file
       per UG65" di atas untuk menambahkannya ke `FMIPA-UG65-LT2.json`.
