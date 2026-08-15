@@ -139,16 +139,28 @@ sesungguhnya**. Sebelum dipakai produksi, checklist ini WAJIB diselesaikan:
       Node-RED. Perlu dicek dulu bagaimana Node-RED di Mini PC ini biasanya
       dijalankan (service Windows terpisah / `node-red` manual / PM2) sebelum
       ditambahkan ke script boot.
-- [ ] **Telemetri WS502_B, WS523_A, WS523_B belum di-decode** — baru VS370
-      (occupancy) dan WS502_A (lampu, representatif) yang dipasang Device
-      Filter + decoder + POST `/api/v1/consumption`. Duplikasi pola yang
-      sama untuk WS502_B kalau perlu data per-unit; WS523 belum ada script
-      decoder resmi di flow ini (ambil dari dokumentasi Milesight WS523,
-      sama seperti VS370/WS502 di-paste dari dokumentasi mereka).
-- [ ] **PATCH status per-device** (`/api/v1/devices/:id/status`, `/reading`)
-      belum disertakan di flow — butuh `device.id` dari database yang belum
-      ada (lihat poin `classes`/`devices` di atas). Baru consumption POST
-      (pakai `class_code`, bukan id) yang jalan tanpa perlu tahu ID.
+- [x] **Telemetri VS370 (occupancy), WS502_A (lampu), WS523_A (AC)** — semua
+      pakai Device Filter + decoder shared + POST `/api/v1/consumption` +
+      PATCH `/api/v1/devices/:id/reading` (real-time). **WS523's decoder
+      BELUM TERVERIFIKASI** — reuse skema WS502 sebagai tebakan terbaik
+      (dicek resmi lewat `github.com/Milesight-IoT/SensorDecoders`, tapi
+      WS523 sendiri belum sempat dicek strukturnya — kalau field-nya beda,
+      angka daya AC yang keluar bisa SALAH, bukan cuma kosong). Bandingkan
+      dengan uplink WS523 asli (debug sidebar Node-RED) begitu ada data
+      sebelum dipercaya untuk laporan/analitik.
+      **Suhu ruangan TIDAK TERSEDIA** — dicek resmi lewat
+      `Milesight-IoT/SensorDecoders` (vs-series/vs370): VS370 cuma punya
+      channel Battery/Occupancy/Illuminance, **tidak ada channel suhu sama
+      sekali**. Kartu "Suhu Rata-rata" di dashboard akan tetap kosong (—)
+      untuk FMIPA sampai ada sensor suhu terpisah terpasang (mis. VS321
+      seperti FISIPOL) dan EUI-nya diketahui.
+      **WS502_B dan WS523_B** (unit "B" tiap ruangan) masih belum di-decode
+      — cuma unit "A" per ruangan yang representatif, sama pola sejak awal.
+- [x] **PATCH status per-device** (`/api/v1/devices/:id/status`, `/reading`)
+      sudah disertakan — `build_device_status_patch_shared` (status) dan
+      `get_data_WS502_A`/`get_data_WS523_A` (reading), pakai `device.id`
+      asli dari `seed_fmipa.sql` (`ROOM_DEVICE_IDS`/`FMIPA_CLASS_IDS` di
+      generator). Diverifikasi langsung — lihat checklist di atas.
 - [x] **IP terminal Hikvision terisi** — dikonfirmasi dari network scan
       user, dan diverifikasi dari sisi kita (`curl` ke `/ISAPI/System/deviceInfo`
       tiap IP, semua balas 401 — signature khas Hikvision, bukan tebakan

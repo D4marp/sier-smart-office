@@ -12,7 +12,7 @@
         "type": "comment",
         "z": "fmipa_lt2_tab",
         "name": "TODO / ASUMSI sebelum deploy",
-        "info": "1. Hex payload LoRa Output untuk WS523 (AC) di semua unit AC PAKAI\n   KODE WS502 (0833ff ON / 0830ff OFF) SEBAGAI TEBAKAN TERBAIK -- BELUM\n   TERVERIFIKASI di hardware WS523 sungguhan. Keputusan sadar (bukan\n   default aman) supaya kontrol AC tidak 100% mati di demo, berdasar\n   WS523 satu keluarga produk Milesight dengan WS502 (WS502 sudah\n   terbukti jalan di FIP). WAJIB uji ke 1 unit AC dulu (nyalakan lewat\n   inject node, lihat reaksi fisik) SEBELUM demo sungguhan -- kalau\n   ternyata salah, cari kode yang benar dari dokumentasi Milesight\n   WS523 dan ganti field \"payload\" di node LoRa Output terkait.\n2. tcp-out \"ke Mini PC\" host-nya diisi 192.168.137.1 (Ethernet 2 di\n   mesin dev -- satu subnet dengan kedua UG65, dikonfirmasi via\n   ipconfig). GANTI kalau Mini PC sungguhan FMIPA IP-nya beda.\n3. Satu tcp-in (:5300) dan satu set fungsi (manual_override_shared,\n   fanout_units, decoder, dst.) melayani SEMUA ruangan di gateway ini\n   -- ruangan dibedakan lewat field classKey/classKode di payload,\n   BUKAN lewat port terpisah per ruangan seperti versi sebelumnya.\n   Menambah ruangan baru = tambah 1 entry di config ROOM_DEVICES pada\n   fungsi manual_override_shared (dan buat switch_by_unitstate + 8\n   LoRa Output leaf baru untuk ruangan itu -- itu bagian yang memang\n   1:1 dengan hardware, tidak bisa digeneralisasi lebih jauh).\n4. Telemetri WS502_B, WS523_A/B belum di-decode (baru VS370 + WS502_A\n   per ruangan, representatif). PATCH status per-device (butuh\n   device.id dari DB) belum disertakan -- baru consumption POST\n   (pakai class_code) yang jalan tanpa perlu ID.\n5. Ada tombol TEST (node inject) per ruangan (\"semua unit ON/OFF\") dan\n   per unit (AC A/B, Lampu A/B, masing-masing ON/OFF) -- klik langsung\n   di kanvas Node-RED ini untuk uji fisik tanpa lewat Web sama sekali.\n   Pola sama seperti flow FIP. Pakai ini untuk verifikasi hex WS523\n   di poin 1 sebelum demo.\n6. MQTT (node mqtt-broker/mqtt-in di bawah, dekat LoRa Input) BELUM\n   TERVERIFIKASI SAMA SEKALI -- broker (port 1883), topic\n   (\"TODO/VERIFY/TOPIC/#\"), dan struktur JSON payload semuanya masih\n   ASUMSI/PLACEHOLDER (pola FIKK yang pakai MQTT dari network-server\n   UG65 sendiri, tapi topic/format asli FMIPA belum dicek). WAJIB buka\n   admin UG65 (Network Server > Application > Integration > MQTT)\n   untuk isi yang benar sebelum jalur ini berguna -- sebelum itu,\n   node mqtt-in kemungkinan tidak menerima apa-apa (topic salah) atau\n   error parse (format JSON beda dari asumsi). Jalur LoRa Input yang\n   sudah ada TIDAK terpengaruh / tidak digantikan oleh ini.",
+        "info": "1. Hex payload LoRa Output untuk WS523 (AC) di semua unit AC PAKAI\n   KODE WS502 (0833ff ON / 0830ff OFF) SEBAGAI TEBAKAN TERBAIK -- BELUM\n   TERVERIFIKASI di hardware WS523 sungguhan. Keputusan sadar (bukan\n   default aman) supaya kontrol AC tidak 100% mati di demo, berdasar\n   WS523 satu keluarga produk Milesight dengan WS502 (WS502 sudah\n   terbukti jalan di FIP). WAJIB uji ke 1 unit AC dulu (nyalakan lewat\n   inject node, lihat reaksi fisik) SEBELUM demo sungguhan -- kalau\n   ternyata salah, cari kode yang benar dari dokumentasi Milesight\n   WS523 dan ganti field \"payload\" di node LoRa Output terkait.\n2. tcp-out \"ke Mini PC\" host-nya diisi 192.168.137.1 (Ethernet 2 di\n   mesin dev -- satu subnet dengan kedua UG65, dikonfirmasi via\n   ipconfig). GANTI kalau Mini PC sungguhan FMIPA IP-nya beda.\n3. Satu tcp-in (:5300) dan satu set fungsi (manual_override_shared,\n   fanout_units, decoder, dst.) melayani SEMUA ruangan di gateway ini\n   -- ruangan dibedakan lewat field classKey/classKode di payload,\n   BUKAN lewat port terpisah per ruangan seperti versi sebelumnya.\n   Menambah ruangan baru = tambah 1 entry di config ROOM_DEVICES pada\n   fungsi manual_override_shared (dan buat switch_by_unitstate + 8\n   LoRa Output leaf baru untuk ruangan itu -- itu bagian yang memang\n   1:1 dengan hardware, tidak bisa digeneralisasi lebih jauh).\n4. Telemetri WS502_A dan WS523_A per ruangan sudah di-decode (POST\n   consumption + PATCH reading real-time) -- WS523_A pola decoder-nya\n   BELUM TERVERIFIKASI (reuse skema WS502, lihat komentar di node\n   Device Filter WS523_A). WS502_B dan WS523_B (unit \"B\" tiap ruangan)\n   masih belum di-decode sama sekali -- cuma unit \"A\" yang representatif.\n   PATCH status per-device (ON/OFF) sudah disertakan lewat\n   build_device_status_patch_shared, pakai device ID asli dari DB.\n5. Ada tombol TEST (node inject) per ruangan (\"semua unit ON/OFF\") dan\n   per unit (AC A/B, Lampu A/B, masing-masing ON/OFF) -- klik langsung\n   di kanvas Node-RED ini untuk uji fisik tanpa lewat Web sama sekali.\n   Pola sama seperti flow FIP. Pakai ini untuk verifikasi hex WS523\n   di poin 1 sebelum demo.\n6. MQTT (node mqtt-broker/mqtt-in di bawah, dekat LoRa Input) BELUM\n   TERVERIFIKASI SAMA SEKALI -- broker (port 1883), topic\n   (\"TODO/VERIFY/TOPIC/#\"), dan struktur JSON payload semuanya masih\n   ASUMSI/PLACEHOLDER (pola FIKK yang pakai MQTT dari network-server\n   UG65 sendiri, tapi topic/format asli FMIPA belum dicek). WAJIB buka\n   admin UG65 (Network Server > Application > Integration > MQTT)\n   untuk isi yang benar sebelum jalur ini berguna -- sebelum itu,\n   node mqtt-in kemungkinan tidak menerima apa-apa (topic salah) atau\n   error parse (format JSON beda dari asumsi). Jalur LoRa Input yang\n   sudah ada TIDAK terpengaruh / tidak digantikan oleh ini.",
         "x": 300,
         "y": 40,
         "wires": []
@@ -801,6 +801,54 @@
         ]
     },
     {
+        "id": "c140203_filterWS523A",
+        "type": "Device Filter",
+        "z": "fmipa_lt2_tab",
+        "name": "WS523_A C14.02.03",
+        "eui": "24E124148060DAC1",
+        "x": 360,
+        "y": 820,
+        "wires": [
+            [
+                "c140203_tagWS523A"
+            ]
+        ]
+    },
+    {
+        "id": "c140203_tagWS523A",
+        "type": "change",
+        "z": "fmipa_lt2_tab",
+        "name": "tag classKey (C14.02.03)",
+        "rules": [
+            {
+                "t": "set",
+                "p": "classKey",
+                "pt": "msg",
+                "to": "c140203",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "classCode",
+                "pt": "msg",
+                "to": "C14.02.03",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 500,
+        "y": 820,
+        "wires": [
+            [
+                "lt2_ws523DecoderShared"
+            ]
+        ]
+    },
+    {
         "id": "lt2_loraInput",
         "type": "LoRa Input",
         "z": "fmipa_lt2_tab",
@@ -812,7 +860,8 @@
         "wires": [
             [
                 "c140203_filterVS370",
-                "c140203_filterWS502A"
+                "c140203_filterWS502A",
+                "c140203_filterWS523A"
             ]
         ]
     },
@@ -869,8 +918,8 @@
         "type": "function",
         "z": "fmipa_lt2_tab",
         "name": "route_mqtt_uplink_by_eui",
-        "func": "// BELUM TERVERIFIKASI: struktur JSON MQTT ini cuma ASUMSI (mirip pola\n// umum ChirpStack: {devEui, data (base64), fPort}), BUKAN dikonfirmasi\n// dari payload asli UG65. Cek Network Server > Application >\n// Integration > MQTT di admin UG65 (https://192.168.137.163/) untuk topic\n// dan struktur payload sebenarnya, lalu sesuaikan bagian parsing ini.\n// Broker & topic mqtt-in di atas juga masih placeholder (port 1883\n// default, topic \"TODO/VERIFY/TOPIC/#\") -- ganti sesuai konfigurasi asli.\nvar ROOM_EUI_MAP = {\n    \"24E1247730634F97\": {\n        \"classKey\": \"c140203\",\n        \"classCode\": \"C14.02.03\",\n        \"kind\": \"vs370\"\n    },\n    \"24E124771063A184\": {\n        \"classKey\": \"c140203\",\n        \"classCode\": \"C14.02.03\",\n        \"kind\": \"ws502\"\n    }\n};\n\nvar p = msg.payload;\nif (typeof p === \"string\") {\n    try { p = JSON.parse(p); } catch (e) {\n        node.warn(\"MQTT payload bukan JSON valid: \" + p);\n        return null;\n    }\n}\nif (Buffer.isBuffer(p)) {\n    try { p = JSON.parse(p.toString(\"utf8\")); } catch (e) {\n        node.warn(\"MQTT payload (buffer) bukan JSON valid\");\n        return null;\n    }\n}\n\nvar eui = String(\n    p.devEui || (p.deviceInfo && p.deviceInfo.devEui) || p.eui || p.deveui || \"\"\n).toUpperCase();\nvar info = ROOM_EUI_MAP[eui];\nif (!info) {\n    node.warn(\"MQTT uplink dari EUI tidak dikenal di gateway ini: \" + eui);\n    return null;\n}\n\nmsg.classKey = info.classKey;\nmsg.classCode = info.classCode;\nmsg.payload = p.data || p.payload_raw || p.payloadHex || p.payload;\nif (!msg.payload) {\n    node.warn(\"MQTT uplink \" + eui + \": tidak ada field data/payload yang dikenal di JSON\");\n    return null;\n}\n\nreturn [info.kind === \"vs370\" ? msg : null, info.kind === \"ws502\" ? msg : null];",
-        "outputs": 2,
+        "func": "// BELUM TERVERIFIKASI: struktur JSON MQTT ini cuma ASUMSI (mirip pola\n// umum ChirpStack: {devEui, data (base64), fPort}), BUKAN dikonfirmasi\n// dari payload asli UG65. Cek Network Server > Application >\n// Integration > MQTT di admin UG65 (https://192.168.137.163/) untuk topic\n// dan struktur payload sebenarnya, lalu sesuaikan bagian parsing ini.\n// Broker & topic mqtt-in di atas juga masih placeholder (port 1883\n// default, topic \"TODO/VERIFY/TOPIC/#\") -- ganti sesuai konfigurasi asli.\nvar ROOM_EUI_MAP = {\n    \"24E1247730634F97\": {\n        \"classKey\": \"c140203\",\n        \"classCode\": \"C14.02.03\",\n        \"kind\": \"vs370\"\n    },\n    \"24E124771063A184\": {\n        \"classKey\": \"c140203\",\n        \"classCode\": \"C14.02.03\",\n        \"kind\": \"ws502\"\n    },\n    \"24E124148060DAC1\": {\n        \"classKey\": \"c140203\",\n        \"classCode\": \"C14.02.03\",\n        \"kind\": \"ws523\"\n    }\n};\n\nvar p = msg.payload;\nif (typeof p === \"string\") {\n    try { p = JSON.parse(p); } catch (e) {\n        node.warn(\"MQTT payload bukan JSON valid: \" + p);\n        return null;\n    }\n}\nif (Buffer.isBuffer(p)) {\n    try { p = JSON.parse(p.toString(\"utf8\")); } catch (e) {\n        node.warn(\"MQTT payload (buffer) bukan JSON valid\");\n        return null;\n    }\n}\n\nvar eui = String(\n    p.devEui || (p.deviceInfo && p.deviceInfo.devEui) || p.eui || p.deveui || \"\"\n).toUpperCase();\nvar info = ROOM_EUI_MAP[eui];\nif (!info) {\n    node.warn(\"MQTT uplink dari EUI tidak dikenal di gateway ini: \" + eui);\n    return null;\n}\n\nmsg.classKey = info.classKey;\nmsg.classCode = info.classCode;\nmsg.payload = p.data || p.payload_raw || p.payloadHex || p.payload;\nif (!msg.payload) {\n    node.warn(\"MQTT uplink \" + eui + \": tidak ada field data/payload yang dikenal di JSON\");\n    return null;\n}\n\nreturn [\n    info.kind === \"vs370\" ? msg : null,\n    info.kind === \"ws502\" ? msg : null,\n    info.kind === \"ws523\" ? msg : null\n];",
+        "outputs": 3,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
@@ -883,6 +932,9 @@
             ],
             [
                 "lt2_ws502DecoderShared"
+            ],
+            [
+                "lt2_ws523DecoderShared"
             ]
         ]
     },
@@ -995,6 +1047,44 @@
         "libs": [],
         "x": 880,
         "y": 500,
+        "wires": [
+            [
+                "lt2_toMiniPC"
+            ]
+        ]
+    },
+    {
+        "id": "lt2_ws523DecoderShared",
+        "type": "function",
+        "z": "fmipa_lt2_tab",
+        "name": "WS523 Decoder (shared, BELUM TERVERIFIKASI -- reuse skema WS502)",
+        "func": "/**\n * Payload Decoder\n *\n * Copyright 2025 Milesight IoT\n *\n * @product WS502_EU\n */\nvar RAW_VALUE = 0x00;\n\n/* eslint no-redeclare: \"off\" */\n/* eslint-disable */\nfunction decodeUplink(input) {\n    var decoded = milesightDeviceDecode(input.bytes);\n    return { data: decoded };\n}\n\nfunction Decode(fPort, bytes) {\n    return milesightDeviceDecode(bytes);\n}\n\nfunction Decoder(bytes, port) {\n    return milesightDeviceDecode(bytes);\n}\n/* eslint-enable */\n\nfunction milesightDeviceDecode(bytes) {\n    var decoded = {};\n\n    for (var i = 0; i < bytes.length;) {\n        var channel_id = bytes[i++];\n        var channel_type = bytes[i++];\n\n        if (channel_id === 0xff && channel_type === 0x01) {\n            decoded.ipso_version = readProtocolVersion(bytes[i]);\n            i += 1;\n        }\n        else if (channel_id === 0xff && channel_type === 0x09) {\n            decoded.hardware_version = readHardwareVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        else if (channel_id === 0xff && channel_type === 0x0a) {\n            decoded.firmware_version = readFirmwareVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        else if (channel_id === 0xff && channel_type === 0xff) {\n            decoded.tsl_version = readTslVersion(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        else if (channel_id === 0xff && channel_type === 0x16) {\n            decoded.sn = readSerialNumber(bytes.slice(i, i + 8));\n            i += 8;\n        }\n        else if (channel_id === 0xff && channel_type === 0x0f) {\n            decoded.lorawan_class = readLoRaWANClass(bytes[i]);\n            i += 1;\n        }\n        else if (channel_id === 0xff && channel_type === 0xfe) {\n            decoded.reset_event = readResetEvent(1);\n            i += 1;\n        }\n        else if (channel_id === 0xff && channel_type === 0x0b) {\n            decoded.device_status = readOnOffStatus(1);\n            i += 1;\n        }\n        else if (channel_id === 0x03 && channel_type === 0x74) {\n            decoded.voltage = readUInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n        }\n        else if (channel_id === 0x04 && channel_type === 0x80) {\n            decoded.active_power = readUInt32LE(bytes.slice(i, i + 4));\n            i += 4;\n        }\n        else if (channel_id === 0x05 && channel_type === 0x81) {\n            decoded.power_factor = readUInt8(bytes[i]);\n            i += 1;\n        }\n        else if (channel_id === 0x06 && channel_type == 0x83) {\n            decoded.power_consumption = readUInt32LE(bytes.slice(i, i + 4));\n            i += 4;\n        }\n        else if (channel_id === 0x07 && channel_type == 0xc9) {\n            decoded.current = readUInt16LE(bytes.slice(i, i + 2));\n            i += 2;\n        }\n        else if (channel_id === 0x08 && channel_type === 0x29) {\n            var value = bytes[i];\n            decoded.switch_1 = readOnOffStatus((value >>> 0) & 0x01);\n            decoded.switch_1_change = readYesNoStatus((value >>> 4) & 0x01);\n            decoded.switch_2 = readOnOffStatus((value >>> 1) & 0x01);\n            decoded.switch_2_change = readYesNoStatus((value >>> 5) & 0x01);\n            i += 1;\n        }\n        else if (channel_id === 0xfe || channel_id === 0xff) {\n            var result = handle_downlink_response(channel_type, bytes, i);\n            decoded = Object.assign(decoded, result.data);\n            i = result.offset;\n        } else {\n            break;\n        }\n    }\n\n    return decoded;\n}\n\nfunction handle_downlink_response(channel_type, bytes, offset) {\n    var decoded = {};\n\n    switch (channel_type) {\n        case 0x03:\n            decoded.report_interval = readUInt16LE(bytes.slice(offset, offset + 2));\n            offset += 2;\n            break;\n        case 0x10:\n            decoded.reboot = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x22:\n            decoded.delay_task = {};\n            decoded.delay_task.frame_count = readUInt8(bytes[offset]);\n            decoded.delay_task.delay_time = readUInt16LE(bytes.slice(offset + 1, offset + 3));\n            var data = readUInt8(bytes[offset + 3]);\n            var switch_bit_offset = { switch_1: 0, switch_2: 1, switch_3: 2 };\n            for (var key in switch_bit_offset) {\n                if ((data >>> (switch_bit_offset[key] + 4)) & 0x01) {\n                    decoded.delay_task[key] = readOnOffStatus((data >> switch_bit_offset[key]) & 0x01);\n                }\n            }\n            offset += 4;\n            break;\n        case 0x23:\n            decoded.cancel_delay_task = readUInt8(bytes[offset]);\n            offset += 2;\n            break;\n        case 0x25:\n            var data = readUInt16LE(bytes.slice(offset, offset + 2));\n            decoded.child_lock_config = {};\n            decoded.child_lock_config.enable = readEnableStatus((data >>> 15) & 0x01);\n            decoded.child_lock_config.lock_time = data & 0x7fff;\n            offset += 2;\n            break;\n        case 0x26:\n            decoded.power_consumption_enable = readEnableStatus(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x27:\n            decoded.clear_power_consumption = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x28:\n            decoded.report_status = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x2c:\n            decoded.report_attribute = readYesNoStatus(1);\n            offset += 1;\n            break;\n        case 0x2f:\n            decoded.led_mode = readLedMode(bytes[offset]);\n            offset += 1;\n            break;\n        case 0x5e:\n            decoded.reset_button_enable = readEnableStatus(bytes[offset]);\n            offset += 1;\n            break;\n        default:\n            throw new Error(\"unknown downlink response\");\n    }\n\n    return { data: decoded, offset: offset };\n}\n\nfunction readProtocolVersion(bytes) {\n    var major = (bytes & 0xf0) >> 4;\n    var minor = bytes & 0x0f;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readHardwareVersion(bytes) {\n    var major = (bytes[0] & 0xff).toString(16);\n    var minor = (bytes[1] & 0xff) >> 4;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readFirmwareVersion(bytes) {\n    var major = (bytes[0] & 0xff).toString(16);\n    var minor = (bytes[1] & 0xff).toString(16);\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readTslVersion(bytes) {\n    var major = bytes[0] & 0xff;\n    var minor = bytes[1] & 0xff;\n    return \"v\" + major + \".\" + minor;\n}\n\nfunction readSerialNumber(bytes) {\n    var temp = [];\n    for (var idx = 0; idx < bytes.length; idx++) {\n        temp.push((\"0\" + (bytes[idx] & 0xff).toString(16)).slice(-2));\n    }\n    return temp.join(\"\");\n}\n\nfunction readLoRaWANClass(type) {\n    var class_map = {\n        0: \"Class A\",\n        1: \"Class B\",\n        2: \"Class C\",\n        3: \"Class CtoB\",\n    };\n    return getValue(class_map, type);\n}\n\nfunction readResetEvent(status) {\n    var status_map = { 0: \"normal\", 1: \"reset\" };\n    return getValue(status_map, status);\n}\n\nfunction readOnOffStatus(status) {\n    var status_map = { 0: \"off\", 1: \"on\" };\n    return getValue(status_map, status);\n}\n\nfunction readYesNoStatus(status) {\n    var status_map = { 0: \"no\", 1: \"yes\" };\n    return getValue(status_map, status);\n}\n\nfunction readLedMode(bytes) {\n    var led_mode_map = { 0: \"off\", 1: \"on_inverted\", 2: \"on_synced\" };\n    return getValue(led_mode_map, bytes);\n}\n\nfunction readEnableStatus(status) {\n    var status_map = { 0: \"disable\", 1: \"enable\" };\n    return getValue(status_map, status);\n}\n\n/* eslint-disable */\nfunction readUInt8(bytes) {\n    return bytes & 0xff;\n}\n\nfunction readInt8(bytes) {\n    var ref = readUInt8(bytes);\n    return ref > 0x7f ? ref - 0x100 : ref;\n}\n\nfunction readUInt16LE(bytes) {\n    var value = (bytes[1] << 8) + bytes[0];\n    return value & 0xffff;\n}\n\nfunction readInt16LE(bytes) {\n    var ref = readUInt16LE(bytes);\n    return ref > 0x7fff ? ref - 0x10000 : ref;\n}\n\nfunction readUInt32LE(bytes) {\n    var value = (bytes[3] << 24) + (bytes[2] << 16) + (bytes[1] << 8) + bytes[0];\n    return (value & 0xffffffff) >>> 0;\n}\n\nfunction readInt32LE(bytes) {\n    var ref = readUInt32LE(bytes);\n    return ref > 0x7fffffff ? ref - 0x100000000 : ref;\n}\n\nfunction getValue(map, key) {\n    if (RAW_VALUE) return key;\n\n    var value = map[key];\n    if (!value) value = \"unknown\";\n    return value;\n}\n\nObject.defineProperty(Object, \"assign\", {\n    enumerable: false,\n    configurable: true,\n    writable: true,\n    value: function (target) {\n        \"use strict\";\n        if (target == null) {\n            throw new TypeError(\"Cannot convert first argument to object\");\n        }\n\n        var to = Object(target);\n        for (var i = 1; i < arguments.length; i++) {\n            var nextSource = arguments[i];\n            if (nextSource == null) {\n                continue;\n            }\n            nextSource = Object(nextSource);\n\n            var keysArray = Object.keys(Object(nextSource));\n            for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {\n                var nextKey = keysArray[nextIndex];\n                var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);\n                if (desc !== undefined && desc.enumerable) {\n                    if (Array.isArray(to[nextKey]) && Array.isArray(nextSource[nextKey])) {\n                        to[nextKey] = to[nextKey].concat(nextSource[nextKey]);\n                    } else {\n                        to[nextKey] = nextSource[nextKey];\n                    }\n                }\n            }\n        }\n        return to;\n    },\n});",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 820,
+        "wires": [
+            [
+                "lt2_ws523DataShared"
+            ]
+        ]
+    },
+    {
+        "id": "lt2_ws523DataShared",
+        "type": "function",
+        "z": "fmipa_lt2_tab",
+        "name": "get_data_WS523_A (shared, BELUM TERVERIFIKASI)",
+        "func": "// Sama pola dengan get_data_WS502_A, tapi untuk daya AC (power_ac).\n// BELUM TERVERIFIKASI -- lihat komentar di node Device Filter WS523_A:\n// decoder di atas reuse skema WS502, field active_power/power_consumption\n// bisa jadi TIDAK cocok kalau WS523 pakai channel_id/type berbeda.\n// Bandingkan dengan uplink WS523 asli (debug sidebar) sebelum dipercaya.\nvar ROOM_DEVICE_IDS = {\n    \"c140203\": {\n        \"WS523_A\": 21,\n        \"WS523_B\": 22,\n        \"WS502_A\": 23,\n        \"WS502_B\": 24\n    }\n};\n\nvar classKey = msg.classKey;\nvar classCode = msg.classCode || classKey;\nvar p = msg.payload || {};\nvar data = global.get(\"fmipa_state_\" + classKey) || {};\n\nif (typeof p.active_power === \"number\" && isFinite(p.active_power)) {\n    data.power_ac_kw = p.active_power / 1000;\n}\nglobal.set(\"fmipa_state_\" + classKey, data);\n\nvar out = [];\nout.push({\n    payload: JSON.stringify({\n        method: \"POST\",\n        url: \"http://127.0.0.1:5001/api/v1/consumption\",\n        payload: { class_code: classCode, power_ac: data.power_ac_kw, occupancy: data.occupancy }\n    }) + \"\\n\"\n});\n\nvar ids = ROOM_DEVICE_IDS[classKey];\nvar acAId = ids && ids.WS523_A;\nif (acAId && typeof data.power_ac_kw === \"number\") {\n    out.push({\n        payload: JSON.stringify({\n            method: \"PATCH\",\n            url: \"http://127.0.0.1:5001/api/v1/devices/\" + acAId + \"/reading\",\n            payload: { power: data.power_ac_kw }\n        }) + \"\\n\"\n    });\n}\n\nreturn [out];",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 820,
         "wires": [
             [
                 "lt2_toMiniPC"
