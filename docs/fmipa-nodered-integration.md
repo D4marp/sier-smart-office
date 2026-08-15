@@ -199,6 +199,30 @@ Prioritas kendali per ruangan (dari yang paling menang), berlaku sama untuk
    tiap ada laporan VS370 baru: `occupied` → nyala, `vacant` → mati. Event
    -driven, bukan timer proaktif.
 
+## Fix: event akses tidak tersimpan dengan benar (`class_id` NULL)
+
+Ditemukan lewat tes langsung (simulasi tap): `build_access_alert_shared` di
+`FMIPA-ACCESS-CONTROL.json` memang sudah kirim event akses ke
+`POST /api/v1/alerts/device-event` (baris `alerts` benar-benar tersimpan di
+database), **tapi** `class_id`-nya selalu `NULL` — kode ruangan cuma ada di
+`metadata.room` (JSON blob), bukan di kolom `class_id` yang sebenarnya.
+Akibatnya `Alert.getByClass()` (model, `WHERE class_id = ?` — dipakai
+tampilan alert per-ruangan) **tidak akan pernah** menemukan event akses
+manapun, walau datanya ada di database.
+
+Diperbaiki: `check_access_granted_and_tag` sekarang juga men-tag
+`msg.classId` (dari `FMIPA_CLASS_IDS`, hasil `SELECT id, name FROM classes`
+di `smart_energy_fmipa` setelah `seed_fmipa.sql`), dan
+`build_access_alert_shared` mengirim `class_id` itu di payload. Diverifikasi
+langsung: simulasi tap C14.04.02 → baris `alerts` baru dengan `class_id = 1`
+(cocok dengan `classes.id` C14.04.02 yang sebenarnya).
+
+⚠️ `FMIPA_CLASS_IDS` di `gen-fmipa.js` (generator, bukan bagian repo) pakai
+angka hasil query manual saat itu (`1..5` sesuai urutan insert
+`seed_fmipa.sql`). Kalau `classes` FMIPA pernah di-seed ulang dari state
+yang berbeda (bukan database kosong), **verifikasi ulang** ID-nya lewat
+`SELECT id, name FROM classes` sebelum percaya mapping ini.
+
 ## MQTT (jalur telemetri alternatif, pola FIKK) — BELUM TERVERIFIKASI
 
 FIKK menerima telemetri UG65→Mini PC lewat MQTT (bukan cuma custom node
