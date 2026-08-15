@@ -24,6 +24,18 @@ const FIKK_PROJECTOR_IR = {
   u50201: { host: '192.168.0.161', port: 5301, onHex: '2a2030204952203030310d', offHex: '2a2030204952203030320d' }
 };
 
+// FMIPA proyektor: pola sama seperti FIKK (IR blaster SN3001P, TCP raw
+// text dari backend, bukan lewat Node-RED). Network scan menemukan 2 unit
+// SN3001P nyata di jaringan FMIPA (192.168.137.28 dan 192.168.137.60 /
+// SN300X.mshome.net), TAPI belum dikonfirmasi ruangan mana masing-masing
+// dan belum ada kode IR ON/OFF yang di-learn untuk ruangan manapun.
+// SENGAJA dibiarkan kosong (bukan diisi tebakan classKey/hex) supaya
+// endpoint kontrol proyektor mengembalikan 404 alih-alih menembak kode
+// yang salah -- isi entry di sini begitu ruangan+kode IR-nya terkonfirmasi,
+// mis.:
+//   c140402: { host: '192.168.137.28', port: 5301, onHex: '...', offHex: '...' }
+const FMIPA_PROJECTOR_IR = {};
+
 const TARGETS = {
   // "lamp" = kedua unit lampu ruangan sekaligus. "lamp1"/"lamp2" = unit
   // individual (dipakai ruangan dengan >1 unit, mis. FISIPOL — 2 relay
@@ -882,9 +894,10 @@ class DeviceController {
       const classKey = normalizeClassKey(classCode);
       const normalizedAction = String(finalAction).toLowerCase();
 
-      // FIKK projector: IR blaster SN3001P, protokol raw text, bukan TARGETS/JSON biasa
-      if (targetType === 'projector' && FIKK_PROJECTOR_IR[classKey]) {
-        const irTarget = FIKK_PROJECTOR_IR[classKey];
+      // FIKK & FMIPA projector: IR blaster SN3001P, protokol raw text, bukan TARGETS/JSON biasa
+      const projectorIrTarget = FIKK_PROJECTOR_IR[classKey] || FMIPA_PROJECTOR_IR[classKey];
+      if (targetType === 'projector' && projectorIrTarget) {
+        const irTarget = projectorIrTarget;
         const irHex = normalizedAction === 'on' ? irTarget.onHex : irTarget.offHex;
         const irPayload = Buffer.from(irHex, 'hex');
 

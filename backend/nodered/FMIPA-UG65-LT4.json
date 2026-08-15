@@ -12,7 +12,7 @@
         "type": "comment",
         "z": "fmipa_lt4_tab",
         "name": "TODO / ASUMSI sebelum deploy",
-        "info": "1. Hex payload LoRa Output untuk WS523 (AC) di semua unit AC PAKAI\n   KODE WS502 (0833ff ON / 0830ff OFF) SEBAGAI TEBAKAN TERBAIK -- BELUM\n   TERVERIFIKASI di hardware WS523 sungguhan. Keputusan sadar (bukan\n   default aman) supaya kontrol AC tidak 100% mati di demo, berdasar\n   WS523 satu keluarga produk Milesight dengan WS502 (WS502 sudah\n   terbukti jalan di FIP). WAJIB uji ke 1 unit AC dulu (nyalakan lewat\n   inject node, lihat reaksi fisik) SEBELUM demo sungguhan -- kalau\n   ternyata salah, cari kode yang benar dari dokumentasi Milesight\n   WS523 dan ganti field \"payload\" di node LoRa Output terkait.\n2. tcp-out \"ke Mini PC\" host-nya diisi 192.168.137.1 (Ethernet 2 di\n   mesin dev -- satu subnet dengan kedua UG65, dikonfirmasi via\n   ipconfig). GANTI kalau Mini PC sungguhan FMIPA IP-nya beda.\n3. Satu tcp-in (:5300) dan satu set fungsi (manual_override_shared,\n   fanout_units, decoder, dst.) melayani SEMUA ruangan di gateway ini\n   -- ruangan dibedakan lewat field classKey/classKode di payload,\n   BUKAN lewat port terpisah per ruangan seperti versi sebelumnya.\n   Menambah ruangan baru = tambah 1 entry di config ROOM_DEVICES pada\n   fungsi manual_override_shared (dan buat switch_by_unitstate + 8\n   LoRa Output leaf baru untuk ruangan itu -- itu bagian yang memang\n   1:1 dengan hardware, tidak bisa digeneralisasi lebih jauh).\n4. Telemetri WS502_B, WS523_A/B belum di-decode (baru VS370 + WS502_A\n   per ruangan, representatif). PATCH status per-device (butuh\n   device.id dari DB) belum disertakan -- baru consumption POST\n   (pakai class_code) yang jalan tanpa perlu ID.\n5. Ada tombol TEST (node inject) per ruangan (\"semua unit ON/OFF\") dan\n   per unit (AC A/B, Lampu A/B, masing-masing ON/OFF) -- klik langsung\n   di kanvas Node-RED ini untuk uji fisik tanpa lewat Web sama sekali.\n   Pola sama seperti flow FIP. Pakai ini untuk verifikasi hex WS523\n   di poin 1 sebelum demo.",
+        "info": "1. Hex payload LoRa Output untuk WS523 (AC) di semua unit AC PAKAI\n   KODE WS502 (0833ff ON / 0830ff OFF) SEBAGAI TEBAKAN TERBAIK -- BELUM\n   TERVERIFIKASI di hardware WS523 sungguhan. Keputusan sadar (bukan\n   default aman) supaya kontrol AC tidak 100% mati di demo, berdasar\n   WS523 satu keluarga produk Milesight dengan WS502 (WS502 sudah\n   terbukti jalan di FIP). WAJIB uji ke 1 unit AC dulu (nyalakan lewat\n   inject node, lihat reaksi fisik) SEBELUM demo sungguhan -- kalau\n   ternyata salah, cari kode yang benar dari dokumentasi Milesight\n   WS523 dan ganti field \"payload\" di node LoRa Output terkait.\n2. tcp-out \"ke Mini PC\" host-nya diisi 192.168.137.1 (Ethernet 2 di\n   mesin dev -- satu subnet dengan kedua UG65, dikonfirmasi via\n   ipconfig). GANTI kalau Mini PC sungguhan FMIPA IP-nya beda.\n3. Satu tcp-in (:5300) dan satu set fungsi (manual_override_shared,\n   fanout_units, decoder, dst.) melayani SEMUA ruangan di gateway ini\n   -- ruangan dibedakan lewat field classKey/classKode di payload,\n   BUKAN lewat port terpisah per ruangan seperti versi sebelumnya.\n   Menambah ruangan baru = tambah 1 entry di config ROOM_DEVICES pada\n   fungsi manual_override_shared (dan buat switch_by_unitstate + 8\n   LoRa Output leaf baru untuk ruangan itu -- itu bagian yang memang\n   1:1 dengan hardware, tidak bisa digeneralisasi lebih jauh).\n4. Telemetri WS502_B, WS523_A/B belum di-decode (baru VS370 + WS502_A\n   per ruangan, representatif). PATCH status per-device (butuh\n   device.id dari DB) belum disertakan -- baru consumption POST\n   (pakai class_code) yang jalan tanpa perlu ID.\n5. Ada tombol TEST (node inject) per ruangan (\"semua unit ON/OFF\") dan\n   per unit (AC A/B, Lampu A/B, masing-masing ON/OFF) -- klik langsung\n   di kanvas Node-RED ini untuk uji fisik tanpa lewat Web sama sekali.\n   Pola sama seperti flow FIP. Pakai ini untuk verifikasi hex WS523\n   di poin 1 sebelum demo.\n6. MQTT (node mqtt-broker/mqtt-in di bawah, dekat LoRa Input) BELUM\n   TERVERIFIKASI SAMA SEKALI -- broker (port 1883), topic\n   (\"TODO/VERIFY/TOPIC/#\"), dan struktur JSON payload semuanya masih\n   ASUMSI/PLACEHOLDER (pola FIKK yang pakai MQTT dari network-server\n   UG65 sendiri, tapi topic/format asli FMIPA belum dicek). WAJIB buka\n   admin UG65 (Network Server > Application > Integration > MQTT)\n   untuk isi yang benar sebelum jalur ini berguna -- sebelum itu,\n   node mqtt-in kemungkinan tidak menerima apa-apa (topic salah) atau\n   error parse (format JSON beda dari asumsi). Jalur LoRa Input yang\n   sudah ada TIDAK terpengaruh / tidak digantikan oleh ini.",
         "x": 300,
         "y": 40,
         "wires": []
@@ -2820,6 +2820,76 @@
                 "c140408_filterWS502A",
                 "c140409_filterVS370",
                 "c140409_filterWS502A"
+            ]
+        ]
+    },
+    {
+        "id": "lt4_mqttBroker",
+        "type": "mqtt-broker",
+        "name": "UG65 LT4 network-server broker (TODO verifikasi)",
+        "broker": "192.168.137.245",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "lt4_mqttIn",
+        "type": "mqtt in",
+        "z": "fmipa_lt4_tab",
+        "name": "MQTT IN dari network-server UG65 LT4 (TODO verifikasi topic)",
+        "topic": "TODO/VERIFY/TOPIC/#",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "lt4_mqttBroker",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 780,
+        "wires": [
+            [
+                "lt4_mqttRouteByEui"
+            ]
+        ]
+    },
+    {
+        "id": "lt4_mqttRouteByEui",
+        "type": "function",
+        "z": "fmipa_lt4_tab",
+        "name": "route_mqtt_uplink_by_eui",
+        "func": "// BELUM TERVERIFIKASI: struktur JSON MQTT ini cuma ASUMSI (mirip pola\n// umum ChirpStack: {devEui, data (base64), fPort}), BUKAN dikonfirmasi\n// dari payload asli UG65. Cek Network Server > Application >\n// Integration > MQTT di admin UG65 (https://192.168.137.245/) untuk topic\n// dan struktur payload sebenarnya, lalu sesuaikan bagian parsing ini.\n// Broker & topic mqtt-in di atas juga masih placeholder (port 1883\n// default, topic \"TODO/VERIFY/TOPIC/#\") -- ganti sesuai konfigurasi asli.\nvar ROOM_EUI_MAP = {\n    \"24E1247730636D7B\": {\n        \"classKey\": \"c140402\",\n        \"classCode\": \"C14.04.02\",\n        \"kind\": \"vs370\"\n    },\n    \"24E124771063C28D\": {\n        \"classKey\": \"c140402\",\n        \"classCode\": \"C14.04.02\",\n        \"kind\": \"ws502\"\n    },\n    \"24E124773063BC9A\": {\n        \"classKey\": \"c140405\",\n        \"classCode\": \"C14.04.05\",\n        \"kind\": \"vs370\"\n    },\n    \"24E1247710633F62\": {\n        \"classKey\": \"c140405\",\n        \"classCode\": \"C14.04.05\",\n        \"kind\": \"ws502\"\n    },\n    \"24E124773063969F\": {\n        \"classKey\": \"c140408\",\n        \"classCode\": \"C14.04.08\",\n        \"kind\": \"vs370\"\n    },\n    \"24E1247710636DE8\": {\n        \"classKey\": \"c140408\",\n        \"classCode\": \"C14.04.08\",\n        \"kind\": \"ws502\"\n    },\n    \"24E124773063D3F2\": {\n        \"classKey\": \"c140409\",\n        \"classCode\": \"C14.04.09\",\n        \"kind\": \"vs370\"\n    },\n    \"24E124771063C788\": {\n        \"classKey\": \"c140409\",\n        \"classCode\": \"C14.04.09\",\n        \"kind\": \"ws502\"\n    }\n};\n\nvar p = msg.payload;\nif (typeof p === \"string\") {\n    try { p = JSON.parse(p); } catch (e) {\n        node.warn(\"MQTT payload bukan JSON valid: \" + p);\n        return null;\n    }\n}\nif (Buffer.isBuffer(p)) {\n    try { p = JSON.parse(p.toString(\"utf8\")); } catch (e) {\n        node.warn(\"MQTT payload (buffer) bukan JSON valid\");\n        return null;\n    }\n}\n\nvar eui = String(\n    p.devEui || (p.deviceInfo && p.deviceInfo.devEui) || p.eui || p.deveui || \"\"\n).toUpperCase();\nvar info = ROOM_EUI_MAP[eui];\nif (!info) {\n    node.warn(\"MQTT uplink dari EUI tidak dikenal di gateway ini: \" + eui);\n    return null;\n}\n\nmsg.classKey = info.classKey;\nmsg.classCode = info.classCode;\nmsg.payload = p.data || p.payload_raw || p.payloadHex || p.payload;\nif (!msg.payload) {\n    node.warn(\"MQTT uplink \" + eui + \": tidak ada field data/payload yang dikenal di JSON\");\n    return null;\n}\n\nreturn [info.kind === \"vs370\" ? msg : null, info.kind === \"ws502\" ? msg : null];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 780,
+        "wires": [
+            [
+                "lt4_vs370DecoderShared"
+            ],
+            [
+                "lt4_ws502DecoderShared"
             ]
         ]
     },

@@ -199,7 +199,58 @@ Prioritas kendali per ruangan (dari yang paling menang), berlaku sama untuk
    tiap ada laporan VS370 baru: `occupied` → nyala, `vacant` → mati. Event
    -driven, bukan timer proaktif.
 
-## Kenapa tidak perlu ubah `DeviceController.js`
+## MQTT (jalur telemetri alternatif, pola FIKK) — BELUM TERVERIFIKASI
+
+FIKK menerima telemetri UG65→Mini PC lewat MQTT (bukan cuma custom node
+"LoRa Input"), dari broker MQTT bawaan network-server UG65 sendiri. Kedua
+file UG65 FMIPA sekarang punya node `mqtt-broker`+`mqtt in` sebagai **jalur
+paralel** ke LoRa Input yang sudah ada (tidak menggantikan) — begitu sampai
+di `route_mqtt_uplink_by_eui`, hasilnya masuk ke decoder shared yang SAMA
+(VS370/WS502), jadi efeknya identik baik data datang lewat LoRa Input
+maupun MQTT.
+
+**Ini murni kerangka, belum ada satupun yang dikonfirmasi dari hardware
+asli**:
+- Broker: diasumsikan di IP UG65 itu sendiri, port `1883` (default MQTT) —
+  belum dicek apakah UG65 FMIPA benar-benar menjalankan broker di situ.
+- Topic: placeholder `TODO/VERIFY/TOPIC/#` — harus diganti sesuai topic
+  asli.
+- Struktur payload JSON: diasumsikan mirip pola umum ChirpStack
+  (`{devEui, data (base64), fPort}`), **belum dikonfirmasi** dari payload
+  MQTT asli UG65.
+
+Cek semua ini di admin UG65 masing-masing (Network Server → Application →
+Integration → MQTT) sebelum jalur ini berguna. Sampai saat itu, node
+`mqtt in` kemungkinan besar tidak menerima apa-apa (topic salah) atau
+error parse (format beda dari asumsi) — **tidak berbahaya**, cuma tidak
+berfungsi, dan tidak mengganggu jalur LoRa Input yang sudah terbukti jalan.
+
+## Proyektor (SN3001P) — pola FIKK, backend langsung, belum ada data
+
+FIKK mengontrol proyektor via IR blaster **SN3001P** **langsung dari
+backend lewat TCP** (`FIKK_PROJECTOR_IR` di `DeviceController.js`) — bukan
+lewat Node-RED sama sekali. FMIPA sekarang punya `FMIPA_PROJECTOR_IR` yang
+mengikuti pola sama (lihat kode di sana), tapi **objeknya masih kosong**:
+
+- Network scan menemukan 2 device SN3001P nyata di jaringan FMIPA
+  (`192.168.137.28` dan `192.168.137.60` / `SN300X.mshome.net`), tapi
+  **belum dikonfirmasi ruangan mana masing-masing**.
+- **Belum ada kode IR ON/OFF yang di-learn** untuk ruangan manapun (sama
+  seperti gap FIKK — cuma U5.02.01 yang confirmed di sana).
+
+Sengaja dibiarkan kosong (bukan ditebak) supaya endpoint kontrol proyektor
+mengembalikan 404 alih-alih menembak kode yang salah. Isi begitu datanya
+ada:
+```js
+const FMIPA_PROJECTOR_IR = {
+  c140402: { host: '192.168.137.28', port: 5301, onHex: '...', offHex: '...' }
+};
+```
+Tidak perlu baris `classes`/`devices` tambahan untuk proyektor sampai
+ruangannya dikonfirmasi — kalau dipaksa ditambahkan sekarang tanpa tahu
+`class_id` yang benar, bisa salah ruangan.
+
+## Kenapa (hampir) tidak perlu ubah `DeviceController.js`
 
 FMIPA ikut pola **FIKK** (fallback HTTP), bukan pola FIP (TCP langsung dari
 backend): classKey FMIPA (`c140402`, dst.) **sengaja tidak didaftarkan** di
@@ -207,9 +258,11 @@ backend): classKey FMIPA (`c140402`, dst.) **sengaja tidak didaftarkan** di
 `resolveTcpTarget()` selalu `null` untuk device FMIPA, otomatis jatuh ke
 `getNodeRedClassEndpointUrl()` yang memanggil
 `POST http://<NODERED_BASE_URL>/api/<classKey>` — endpoint inilah yang
-diimplementasikan oleh `http in` node di `FMIPA-CONTROL-HUB.json`. Tidak ada
-kode backend yang perlu diubah, hanya `.env` (`NODERED_BASE_URL`) dan data
-`classes`/`devices` di database.
+diimplementasikan oleh `http in` node di `FMIPA-CONTROL-HUB.json`. Satu
+pengecualian: `FMIPA_PROJECTOR_IR` (lihat di atas) — proyektor FIKK/FMIPA
+memang dikendalikan backend langsung, bukan lewat Node-RED, jadi butuh
+entry map di kode (bukan cuma data), tapi objeknya kosong sampai datanya
+ada, jadi tidak mengubah perilaku apa pun untuk sekarang.
 
 ## Rencana port
 
