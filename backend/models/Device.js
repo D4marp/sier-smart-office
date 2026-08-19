@@ -215,6 +215,24 @@ class Device {
     }
   }
 
+  // Uplink IoT terakhir untuk device ini (battery_level, signal_strength, dll).
+  // Kosong bila belum pernah ada uplink nyata (mis. hardware belum terpasang).
+  static async getLatestTelemetry(id) {
+    try {
+      const [rows] = await db.query(
+        `SELECT signal_strength, battery_level, decoded_payload, received_at
+         FROM iot_uplink_messages
+         WHERE device_id = ?
+         ORDER BY received_at DESC
+         LIMIT 1`,
+        [id]
+      );
+      return rows[0] || null;
+    } catch (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+  }
+
   static async getByType(type) {
     try {
       const [rows] = await db.query(`

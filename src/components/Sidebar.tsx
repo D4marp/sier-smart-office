@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, LayoutDashboard, Activity, BarChart3, Bell, Users, Settings, LogOut } from 'lucide-react'
+import { Menu, LayoutDashboard, Activity, BarChart3, Bell, Users, Settings, LogOut, ClipboardList, DoorOpen, Tags } from 'lucide-react'
 import { useAuth } from './AuthProvider'
 
 interface SidebarProps {
@@ -14,9 +14,15 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { href: '/', label: 'Dasbor', icon: LayoutDashboard },
   { href: '/devices', label: 'Perangkat', icon: Activity },
+  { href: '/log-aktivitas', label: 'Log Aktivitas', icon: ClipboardList },
   { href: '/analytics', label: 'Analitik', icon: BarChart3 },
   { href: '/alerts', label: 'Pemberitahuan', icon: Bell },
   { href: '/users', label: 'Pengguna', icon: Users },
+]
+
+const MASTER_DATA_ITEMS = [
+  { href: '/master/ruangan', label: 'Master Ruangan', icon: DoorOpen },
+  { href: '/master/tipe-perangkat', label: 'Master Tipe Perangkat', icon: Tags },
 ]
 
 export default function Sidebar({ open, onToggle }: SidebarProps) {
@@ -24,11 +30,19 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
   const { logout } = useAuth()
 
   return (
-    <aside
-      className={`${
-        open ? 'w-64' : 'w-20'
-      } bg-[#2f46a3] text-white transition-all duration-300 flex flex-col shadow-xl relative z-20 border-r-4 border-r-[#7ca6ff]`}
-    >
+    <>
+      {/* Backdrop di mobile saat sidebar dibuka sebagai overlay */}
+      {open && (
+        <div
+          onClick={onToggle}
+          className="fixed inset-0 bg-black/40 z-[15] sm:hidden"
+        />
+      )}
+      <aside
+        className={`${
+          open ? 'w-64 translate-x-0' : 'w-20 -translate-x-full sm:translate-x-0'
+        } fixed sm:static inset-y-0 left-0 bg-[#2f46a3] text-white transition-all duration-300 flex flex-col shadow-xl z-20 border-r-4 border-r-[#7ca6ff]`}
+      >
       <div className="p-4 flex items-center justify-between border-b border-white/10">
         {open && (
           <div className="flex-1 w-full h-auto flex items-center gap-2">
@@ -60,6 +74,25 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
             </Link>
           )
         })}
+
+        {open && (
+          <p className="px-4 pt-4 pb-1 text-[10px] font-bold text-white/40 uppercase tracking-wider">Master Data</p>
+        )}
+        {MASTER_DATA_ITEMS.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center space-x-3 px-4 py-3 rounded transition-all ${
+                active ? 'bg-white/10 text-white font-bold' : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Icon size={20} className={active ? 'text-[#7ca6ff]' : ''} />
+              {open && <span className="text-sm">{label}</span>}
+            </Link>
+          )
+        })}
       </nav>
 
       <div className="px-3 pb-6 space-y-2 border-t border-white/10 pt-4">
@@ -72,6 +105,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
           {open && <span className="text-sm">Keluar</span>}
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

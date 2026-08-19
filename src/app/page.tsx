@@ -12,6 +12,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { SIER_TENANT_CODE } from '@/lib/tenantDefaults'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
+import RoomDropdown from '@/components/RoomDropdown'
 import {
   type Device, type ChartDataPoint, type MonthlyTrendPoint, type EnergyRange,
   formatMonthlyTrendSummary, isDeviceOnline, buildDateWindow, buildMonthWorkWeekPeriods,
@@ -138,9 +139,11 @@ export default function SierDashboard() {
     const avgTemp = allTemps.length > 0 ? (allTemps.reduce((s, t) => s + t, 0) / allTemps.length).toFixed(1) : '—'
 
     const onlineDevicesCount = filteredDevices.filter(isDeviceOnline).length
+    const offlineDevicesCount = filteredDevices.length - onlineDevicesCount
+    const gatewayCount = devices.filter((d) => d.device_type === 'GATEWAY').length
 
-    return { liveAcPower, liveLampPower, avgTemp, onlineDevicesCount, roomCount: rooms.length - 1 }
-  }, [filteredDevices, rooms])
+    return { liveAcPower, liveLampPower, avgTemp, onlineDevicesCount, offlineDevicesCount, gatewayCount, roomCount: rooms.length - 1 }
+  }, [filteredDevices, rooms, devices])
 
   useEffect(() => {
     const loadConsumptionData = async () => {
@@ -460,28 +463,18 @@ export default function SierDashboard() {
               <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex flex-col gap-3">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pilih Ruangan</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {rooms.map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => setSelectedRoom(r)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                          selectedRoom === r ? 'bg-[#2f46a3] text-white border-[#7ca6ff]/30 shadow-md' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
+                  <RoomDropdown rooms={rooms} value={selectedRoom} onChange={setSelectedRoom} allLabel="Semua" />
                 </div>
               </div>
 
               {/* KPI Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                 <KPICard title="AC — Daya Saat Ini" value={`${currentStats.liveAcPower.toFixed(2)} kW`} change="Beban Berjalan" icon={<Zap className="text-orange-500" size={20} />} bgColor="bg-orange-50" />
                 <KPICard title="Lampu — Daya Saat Ini" value={`${currentStats.liveLampPower.toFixed(2)} kW`} change="Daya Terkalkulasi" icon={<Zap className="text-yellow-500" size={20} />} bgColor="bg-yellow-50" />
                 <KPICard title="Suhu Rata-rata" value={`${currentStats.avgTemp}${currentStats.avgTemp !== '—' ? ' °C' : ''}`} change={`${currentStats.roomCount} Ruang Terpantau`} icon={<Activity className="text-teal-500" size={20} />} bgColor="bg-teal-50" />
                 <KPICard title="Perangkat Aktif" value={`${currentStats.onlineDevicesCount} / ${filteredDevices.length}`} change="Total Perangkat Terdaftar" icon={<Activity className="text-purple-500" size={20} />} bgColor="bg-purple-50" />
+                <KPICard title="Total Gateway" value={`${currentStats.gatewayCount}`} change="Perangkat Gateway Terdaftar" icon={<SlidersHorizontal className="text-indigo-500" size={20} />} bgColor="bg-indigo-50" />
+                <KPICard title="Perangkat Online/Offline" value={`${currentStats.onlineDevicesCount} Online`} change={`${currentStats.offlineDevicesCount} Offline`} icon={<Power className="text-emerald-500" size={20} />} bgColor="bg-emerald-50" />
               </div>
 
               {/* Charts */}

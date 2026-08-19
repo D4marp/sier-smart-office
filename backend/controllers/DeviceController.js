@@ -1,6 +1,19 @@
 const Device = require('../models/Device');
 const Consumption = require('../models/Consumption');
+const AuditLog = require('../models/AuditLog');
 const net = require('net');
+
+function logDeviceAction(req, { action, entity_id, new_values }) {
+  // Fire-and-forget: kegagalan logging tidak boleh menggagalkan kontrol perangkat.
+  AuditLog.create({
+    user_id: req.user?.sub || null,
+    action,
+    entity_type: 'device',
+    entity_id,
+    new_values,
+    ip_address: req.ip,
+  }).catch((err) => console.error('Gagal menulis audit log:', err.message));
+}
 
 // Target hosts and ports for dynamic control of ac, lamp, and projector
 const LAMP_GATEWAY_HOST = process.env.LAMP_GATEWAY_HOST || process.env.GATEWAY_HOST || "10.12.1.150";
@@ -605,6 +618,7 @@ class DeviceController {
           const tcpResult = await sendTcpCommand(host, tcpPort, tcpPayload);
           const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
           await Device.updateStatus(id, nextStatus);
+          logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: Number(id), new_values: { status: nextStatus, via: 'tcp' } });
 
           return res.json({
             success: true,
@@ -686,6 +700,7 @@ class DeviceController {
 
       const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
       await Device.updateStatus(id, nextStatus);
+      logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: Number(id), new_values: { status: nextStatus, via: 'nodered' } });
 
       return res.json({
         success: true,
@@ -769,6 +784,7 @@ class DeviceController {
           const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
           await Promise.all(devices.map((device) => {
             if (device.device_type !== 'SENSOR') {
+              logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: device.id, new_values: { status: nextStatus, via: 'tcp_class' } });
               return Device.updateStatus(device.id, nextStatus);
             }
             return Promise.resolve();
@@ -842,6 +858,7 @@ class DeviceController {
       const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
       await Promise.all(devices.map((device) => {
         if (device.device_type !== 'SENSOR') {
+          logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: device.id, new_values: { status: nextStatus, via: 'nodered_class' } });
           return Device.updateStatus(device.id, nextStatus);
         }
         return Promise.resolve();
@@ -905,6 +922,7 @@ class DeviceController {
         const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
         const devices = await Device.getByClassCode(classCode);
         const matchedDevices = devices.filter(device => deviceMatchesTargetType(device, targetType));
+        matchedDevices.forEach(device => logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: device.id, new_values: { status: nextStatus } }));
         await Promise.all(matchedDevices.map(device => Device.updateStatus(device.id, nextStatus)));
 
         return res.json({
@@ -968,6 +986,7 @@ class DeviceController {
         const nextStatus = normalizedAction === 'on' ? 'active' : 'idle';
         const devices = await Device.getByClassCode(classCode);
         const matchedDevices = devices.filter(device => deviceMatchesTargetType(device, targetType));
+        matchedDevices.forEach(device => logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: device.id, new_values: { status: nextStatus } }));
         await Promise.all(matchedDevices.map(device => Device.updateStatus(device.id, nextStatus)));
 
         return res.json({
@@ -994,6 +1013,7 @@ class DeviceController {
       const devices = await Device.getByClassCode(classCode);
       const matchedDevices = devices.filter(device => deviceMatchesTargetType(device, targetType));
 
+      matchedDevices.forEach(device => logDeviceAction(req, { action: `device_${normalizedAction}`, entity_id: device.id, new_values: { status: nextStatus } }));
       await Promise.all(matchedDevices.map(device => Device.updateStatus(device.id, nextStatus)));
 
       return res.json({
@@ -1078,6 +1098,51 @@ class DeviceController {
         success: false,
         message: error.message
       });
+    }
+  }
+
+  static async getTelemetry(req, res) {
+    try {
+      const { id } = req.params;
+      const device = await Device.getById(id);
+      if (!device) {
+        return res.status(404).json({ success: false, message: 'Device not found' });
+      }
+      const telemetry = await Device.getLatestTelemetry(id);
+      res.json({ success: true, data: telemetry });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // Restart perangkat — VERSI STATIS: mencatat perintah restart (downlink +
+  // audit log) tapi TIDAK benar-benar mengirim command ke hardware Milesight/
+  // EWS asli. Mengirim command restart nyata butuh detail protokol/API vendor
+  // (mis. LoRaWAN downlink lewat ChirpStack/UG65) yang belum tersedia di
+  // lingkungan ini. Endpoint ini sengaja jujur soal itu di pesan responsnya.
+  static async restart(req, res) {
+    try {
+      const { id } = req.params;
+      const device = await Device.getById(id);
+      if (!device) {
+        return res.status(404).json({ success: false, message: 'Device not found' });
+      }
+
+      const db = require('../config/database');
+      await db.query(
+        `INSERT INTO iot_downlink_messages (device_id, device_eui, command, payload, status)
+         VALUES (?, ?, 'restart', ?, 'pending')`,
+        [id, device.device_eui, JSON.stringify({ requestedBy: req.user?.sub || null })]
+      );
+      logDeviceAction(req, { action: 'device_restart_requested', entity_id: Number(id), new_values: { device_eui: device.device_eui } });
+
+      res.json({
+        success: true,
+        message: 'Perintah restart dicatat. Belum terhubung ke hardware asli — perlu integrasi protokol vendor (LoRaWAN/UG65) untuk benar-benar mengeksekusi.',
+        data: { id: Number(id), status: 'pending' },
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 

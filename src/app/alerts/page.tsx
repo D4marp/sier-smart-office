@@ -1,15 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Bell, AlertCircle, Trash2 } from 'lucide-react'
 import { alertsAPI } from '@/lib/apiClient'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
+import Pagination from '@/components/Pagination'
+import { exportToExcel } from '@/lib/exportExcel'
 
 interface Alert {
   id: number
   title: string
   message: string
+  type?: 'warning' | 'error' | 'success' | 'info'
   severity: 'critical' | 'high' | 'medium' | 'low'
   status: 'unread' | 'read'
   device_id: number
@@ -22,6 +25,8 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const pageSize = 10
 
   // Load alerts from backend API
   useEffect(() => {
@@ -43,11 +48,35 @@ export default function AlertsPage() {
     loadAlerts()
   }, [])
 
-  const filteredAlerts = filterStatus === 'all' 
-    ? alerts 
+  const filteredAlerts = filterStatus === 'all'
+    ? alerts
     : alerts.filter(a => a.status === filterStatus)
 
+  const paginatedAlerts = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return filteredAlerts.slice(start, start + pageSize)
+  }, [filteredAlerts, page])
+
+  useEffect(() => {
+    setPage(1)
+  }, [filterStatus])
+
   const unreadCount = alerts.filter(a => a.status === 'unread').length
+
+  const handleExportAlerts = () => {
+    exportToExcel(
+      filteredAlerts.map((a) => ({
+        Judul: a.title,
+        Pesan: a.message,
+        Tipe: a.type || '-',
+        Severity: a.severity,
+        Status: a.status === 'unread' ? 'Belum Dibaca' : 'Sudah Dibaca',
+        Dibuat: new Date(a.created_at).toLocaleString('id-ID'),
+      })),
+      'pemberitahuan',
+      'Pemberitahuan'
+    )
+  }
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -138,12 +167,12 @@ export default function AlertsPage() {
               <p className="text-slate-500 text-xs mt-0.5">Kelola dan saring pemberitahuan sistem smart energy</p>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="text-right pr-4 border-r border-slate-200">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Belum Dibaca</span>
                 <p className="text-xl font-black text-red-600 leading-none mt-1">{unreadCount}</p>
               </div>
-              
+
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -153,30 +182,38 @@ export default function AlertsPage() {
                 <option value="unread">Belum Dibaca</option>
                 <option value="read">Sudah Dibaca</option>
               </select>
+
+              <button
+                onClick={handleExportAlerts}
+                disabled={filteredAlerts.length === 0}
+                className="px-4 py-2 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Export Excel
+              </button>
             </div>
           </div>
 
           {/* Alerts List */}
           <div className="p-8">
             <div className="space-y-4">
-              {filteredAlerts.length > 0 ? (
-                filteredAlerts.map((alert) => (
-                  <div key={alert.id} className={`p-4 rounded-lg bg-white border border-slate-200 shadow-sm ${getSeverityColor(alert.severity)} flex items-start justify-between`}>
-                    <div className="flex items-start space-x-4 flex-1">
+              {paginatedAlerts.length > 0 ? (
+                paginatedAlerts.map((alert) => (
+                  <div key={alert.id} className={`p-4 rounded-lg bg-white border border-slate-200 shadow-sm ${getSeverityColor(alert.severity)} flex flex-col sm:flex-row sm:items-start justify-between gap-3`}>
+                    <div className="flex items-start space-x-4 flex-1 min-w-0">
                       {getSeverityIcon(alert.severity)}
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{alert.title}</h3>
-                        <p className="text-gray-700 text-sm mt-1">{alert.message}</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 break-words">{alert.title}</h3>
+                        <p className="text-gray-700 text-sm mt-1 break-words">{alert.message}</p>
                         <p className="text-xs text-gray-500 mt-2">
                           Device #{alert.device_id} • {new Date(alert.created_at).toLocaleString('id-ID')}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-auto">
                       {alert.status === 'unread' && (
                         <button
                           onClick={() => handleMarkAsRead(alert.id)}
-                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition-all"
+                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700 transition-all whitespace-nowrap"
                         >
                           Tandai Dibaca
                         </button>
@@ -198,6 +235,10 @@ export default function AlertsPage() {
                 </div>
               )}
             </div>
+
+            {filteredAlerts.length > 0 && (
+              <Pagination page={page} totalItems={filteredAlerts.length} pageSize={pageSize} onPageChange={setPage} />
+            )}
           </div>
         </div>
       </main>

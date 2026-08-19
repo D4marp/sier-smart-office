@@ -90,6 +90,29 @@ export const classesAPI = {
     );
     return response.data;
   },
+
+  create: async (data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>('/classes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  update: async (id: number, data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>(`/classes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await apiCall<{ success: boolean; message: string }>(`/classes/${id}`, {
+      method: 'DELETE',
+    });
+    return response;
+  },
 };
 
 // ============ DEVICES API ============
@@ -178,6 +201,121 @@ export const devicesAPI = {
       }
     );
     return response.data;
+  },
+
+  getTelemetry: async (id: number) => {
+    const response = await apiCall<{ success: boolean; data: any }>(`/devices/${id}/telemetry`);
+    return response.data;
+  },
+
+  // Versi statis: mencatat permintaan restart (audit log + downlink pending),
+  // belum benar-benar mengeksekusi ke hardware Milesight/EWS asli.
+  restart: async (id: number) => {
+    const response = await apiCall<{ success: boolean; message: string; data: any }>(`/devices/${id}/restart`, {
+      method: 'POST',
+    });
+    return response;
+  },
+};
+
+// ============ DEVICE TYPES API (master data) ============
+export const deviceTypesAPI = {
+  getAll: async () => {
+    const response = await apiCall<{ success: boolean; data: any[] }>('/device-types');
+    return response.data;
+  },
+  create: async (data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>('/device-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  update: async (id: number, data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>(`/device-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await apiCall<{ success: boolean; message: string }>(`/device-types/${id}`, {
+      method: 'DELETE',
+    });
+    return response;
+  },
+};
+
+// ============ ROOM OCCUPANTS API (penghuni ruangan / notifikasi) ============
+export const roomOccupantsAPI = {
+  getAll: async (classId?: number) => {
+    const query = classId ? `?classId=${classId}` : '';
+    const response = await apiCall<{ success: boolean; data: any[] }>(`/room-occupants${query}`);
+    return response.data;
+  },
+  create: async (data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>('/room-occupants', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  update: async (id: number, data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>(`/room-occupants/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await apiCall<{ success: boolean; message: string }>(`/room-occupants/${id}`, {
+      method: 'DELETE',
+    });
+    return response;
+  },
+};
+
+// ============ DEVICE SCHEDULES API ("Set Timer") ============
+export const deviceSchedulesAPI = {
+  getAll: async (deviceId?: number) => {
+    const query = deviceId ? `?deviceId=${deviceId}` : '';
+    const response = await apiCall<{ success: boolean; data: any[] }>(`/device-schedules${query}`);
+    return response.data;
+  },
+  create: async (data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>('/device-schedules', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  update: async (id: number, data: any) => {
+    const response = await apiCall<{ success: boolean; data: any }>(`/device-schedules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await apiCall<{ success: boolean; message: string }>(`/device-schedules/${id}`, {
+      method: 'DELETE',
+    });
+    return response;
+  },
+};
+
+// ============ AUDIT LOGS API (Log Aktivitas Perangkat) ============
+export const auditLogsAPI = {
+  getDeviceActivity: async (params: { classId?: number; deviceId?: number; page?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.classId) query.set('classId', String(params.classId));
+    if (params.deviceId) query.set('deviceId', String(params.deviceId));
+    query.set('page', String(params.page || 1));
+    query.set('limit', String(params.limit || 20));
+    const response = await apiCall<{ success: boolean; items: any[]; total: number; page: number; limit: number }>(
+      `/audit-logs/device-activity?${query.toString()}`
+    );
+    return response;
   },
 };
 

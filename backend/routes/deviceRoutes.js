@@ -39,6 +39,12 @@ router.post('/class-code/:classCode/control/:deviceType', DeviceController.contr
 // Update device reading (power & temperature)
 router.patch('/:id/reading', DeviceController.updateReading);
 
+// Latest IoT telemetry (battery/signal) for a device
+router.get('/:id/telemetry', DeviceController.getTelemetry);
+
+// Restart device (stub — lihat catatan di DeviceController.restart)
+router.post('/:id/restart', DeviceController.restart);
+
 // Delete device
 router.delete('/:id', DeviceController.delete);
 

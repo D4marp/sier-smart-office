@@ -11,9 +11,13 @@ require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const tenantManager = require('./config/tenantManager');
 const { resolveTenant } = require('./middleware/tenantMiddleware');
 
-tenantManager.init().catch((err) => {
+const { startScheduler } = require('./services/scheduler');
+
+tenantManager.init().then(() => {
+  startScheduler();
+}).catch((err) => {
   console.error('❌ Registry rektorat tidak dapat dihubungi:', err.message);
-  console.error('   Jalankan: node scripts/setup_multitenant.js');
+  console.error('   Jalankan: node scripts/setup_sier.js');
 });
 
 // Import routes
@@ -25,6 +29,10 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
+const deviceTypeRoutes = require('./routes/deviceTypeRoutes');
+const roomOccupantRoutes = require('./routes/roomOccupantRoutes');
+const deviceScheduleRoutes = require('./routes/deviceScheduleRoutes');
+const auditLogRoutes = require('./routes/auditLogRoutes');
 
 const app = express();
 
@@ -103,6 +111,10 @@ app.use(`${apiPrefix}/devices`, resolveTenant, deviceRoutes);
 app.use(`${apiPrefix}/consumption`, resolveTenant, consumptionRoutes);
 app.use(`${apiPrefix}/alerts`, resolveTenant, alertRoutes);
 app.use(`${apiPrefix}/settings`, resolveTenant, settingsRoutes);
+app.use(`${apiPrefix}/device-types`, resolveTenant, deviceTypeRoutes);
+app.use(`${apiPrefix}/room-occupants`, resolveTenant, roomOccupantRoutes);
+app.use(`${apiPrefix}/device-schedules`, resolveTenant, deviceScheduleRoutes);
+app.use(`${apiPrefix}/audit-logs`, resolveTenant, auditLogRoutes);
 
 // Route registry rektorat: users terpusat + manajemen tenant (tanpa tenant context)
 app.use(`${apiPrefix}/auth`, authRoutes);
