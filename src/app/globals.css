@@ -18,69 +18,11 @@ body {
   min-height: 100vh;
 }
 
-/* === PSIKOLOGI THEME === */
-.gradient-primary {
-  background: linear-gradient(135deg, #201547 0%, #483688 100%);
-}
-
-.gradient-secondary {
-  background: linear-gradient(135deg, #483688 0%, #d8ae47 100%);
-}
-
-/* === REKTORAT THEME === */
-.gradient-rektorat {
-  background: linear-gradient(135deg, #4a0010 0%, #7B0D1E 50%, #9a1020 100%);
-}
-
-.gradient-rektorat-accent {
-  background: linear-gradient(135deg, #7B0D1E 0%, #d8ae47 100%);
-}
-
-/* === FBS THEME === */
-.gradient-fbs {
-  background: linear-gradient(135deg, #052e33 0%, #0D5C63 50%, #0e7280 100%);
-}
-
-.gradient-fbs-accent {
-  background: linear-gradient(135deg, #0D5C63 0%, #2DC653 100%);
-}
-
-/* === SHARED === */
 .card-shadow {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-.card-shadow-rektorat {
-  box-shadow: 0 10px 30px rgba(123, 13, 30, 0.15);
-}
-
-.card-shadow-fbs {
-  box-shadow: 0 10px 30px rgba(13, 92, 99, 0.15);
-}
-
 .smooth-transition {
   transition: all 0.3s ease-in-out;
-}
-
-/* Badge animations */
-@keyframes pulse-live {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.badge-live {
-  animation: pulse-live 2s ease-in-out infinite;
-}
-
-/* Demo banner */
-.demo-banner {
-  background: linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #d97706 100%);
-  background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 

@@ -24,9 +24,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-// Sinkronkan tenant aktif (header X-Tenant) dengan user yang login:
-// user fakultas selalu terkunci pada tenant miliknya; superadmin (rektorat)
-// mempertahankan pilihan switcher-nya.
+// Sinkronkan tenant aktif (header X-Tenant) dengan user yang login.
+// PT SIER berjalan sebagai tenant tunggal ('sier').
 function syncTenantWithUser(user: AuthUser | null) {
   if (!user) return
   if (user.role !== 'superadmin' && user.tenant_code) {
@@ -82,9 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Dipanggil saat superadmin membuka halaman fakultas tertentu dari sidebar.
-  // Tidak reload — setiap halaman men-fetch datanya sendiri saat mount,
-  // jadi cukup set tenant aktif sebelum navigasi terjadi.
+  // Dipanggil saat dashboard mount. Tidak reload — setiap halaman men-fetch
+  // datanya sendiri saat mount, jadi cukup set tenant aktif sebelum itu.
   const switchTenant = (code: string) => {
     const nextCode = user?.role !== 'superadmin' && user?.tenant_code
       ? user.tenant_code

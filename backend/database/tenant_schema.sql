@@ -1,10 +1,10 @@
 -- =============================================================
--- TENANT DATABASE SCHEMA (per FAKULTAS)
--- Diterapkan ke database milik masing-masing fakultas oleh
--- script provisioning (scripts/setup_multitenant.js) atau endpoint
--- POST /api/v1/tenants. Tidak ada CREATE DATABASE di sini —
--- pembuatan database dilakukan oleh provisioner.
--- Tabel users TIDAK ada di sini: user terpusat di registry rektorat.
+-- TENANT DATABASE SCHEMA (gedung kantor SIER)
+-- Diterapkan ke database tenant oleh script provisioning
+-- (scripts/setup_sier.js) atau endpoint POST /api/v1/tenants.
+-- Tidak ada CREATE DATABASE di sini — pembuatan database
+-- dilakukan oleh provisioner.
+-- Tabel users TIDAK ada di sini: user terpusat di registry.
 -- =============================================================
 
 -- Classes/Ruangan table
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS alerts (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Settings table (pengaturan per fakultas)
+-- Settings table
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     setting_key VARCHAR(100) NOT NULL UNIQUE,
@@ -155,8 +155,8 @@ CREATE TABLE IF NOT EXISTS settings (
     INDEX idx_key (setting_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- User Settings table (preferensi user pada fakultas ini;
--- user_id merujuk ke users di registry rektorat, tanpa FK lintas database)
+-- User Settings table (preferensi user pada tenant ini;
+-- user_id merujuk ke users di registry, tanpa FK lintas database)
 CREATE TABLE IF NOT EXISTS user_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS iot_downlink_messages (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Default settings per fakultas
+-- Default settings
 INSERT IGNORE INTO settings (setting_key, setting_value, data_type, description) VALUES
 ('timezone', 'Asia/Jakarta', 'string', 'Default timezone'),
 ('language', 'id', 'string', 'Default language'),

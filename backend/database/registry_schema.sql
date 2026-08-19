@@ -1,9 +1,8 @@
 -- =============================================================
--- REGISTRY DATABASE (level REKTORAT)
--- Menyimpan daftar tenant (fakultas) beserta kredensial database
--- masing-masing, dan user terpusat untuk seluruh universitas.
--- Setiap fakultas memiliki database operasional sendiri
--- (lihat tenant_schema.sql).
+-- REGISTRY DATABASE
+-- Menyimpan daftar tenant beserta kredensial database masing-masing,
+-- dan user terpusat. PT SIER berjalan sebagai tenant tunggal ('sier'),
+-- dengan database operasional sendiri (lihat tenant_schema.sql).
 -- =============================================================
 
 CREATE DATABASE IF NOT EXISTS smart_energy_registry
@@ -11,14 +10,12 @@ CREATE DATABASE IF NOT EXISTS smart_energy_registry
   COLLATE = utf8mb4_unicode_ci;
 USE smart_energy_registry;
 
--- Daftar tenant (fakultas). Level rektorat tidak punya baris di sini;
--- rektorat direpresentasikan oleh user dengan role 'superadmin'
--- dan tenant_id NULL (akses lintas fakultas).
+-- Daftar tenant. Superadmin (tenant_id NULL) punya akses penuh.
 CREATE TABLE IF NOT EXISTS tenants (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE COMMENT 'Kode unik tenant, mis. psikologi, fbs, ft',
-    name VARCHAR(150) NOT NULL COMMENT 'Nama fakultas, mis. Fakultas Psikologi',
-    type ENUM('fakultas', 'unit') DEFAULT 'fakultas',
+    code VARCHAR(50) NOT NULL UNIQUE COMMENT 'Kode unik tenant, mis. sier',
+    name VARCHAR(150) NOT NULL COMMENT 'Nama tenant, mis. PT SIER (Persero)',
+    type ENUM('fakultas', 'unit') DEFAULT 'unit',
     db_host VARCHAR(150) DEFAULT NULL COMMENT 'NULL = pakai DB_HOST dari env backend',
     db_port INT DEFAULT NULL COMMENT 'NULL = pakai DB_PORT dari env backend',
     db_name VARCHAR(100) NOT NULL COMMENT 'Nama database operasional fakultas',

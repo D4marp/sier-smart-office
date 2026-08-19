@@ -176,7 +176,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50" style={{
-      backgroundImage: 'url(/assets/bg_image.png)',
+      backgroundImage: 'url(/sier-building-bg.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
@@ -200,7 +200,7 @@ export default function SettingsPage() {
           <button 
             onClick={handleSave}
             disabled={isSaving || loading}
-            className="px-6 py-2 bg-[#0f2d59] hover:bg-teal-800 text-white rounded-lg text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 smooth-transition"
+            className="px-6 py-2 bg-[#2f46a3] hover:bg-teal-800 text-white rounded-lg text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 smooth-transition"
           >
             <Save size={16} />
             <span>{isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
                     activeTab === tab.id
-                      ? 'bg-[#0f2d59] text-white shadow-sm'
+                      ? 'bg-[#2f46a3] text-white shadow-sm'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
@@ -259,7 +259,7 @@ export default function SettingsPage() {
                     <select
                       value={settings.timezone}
                       onChange={(e) => handleChange('timezone', e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59] text-slate-700 font-bold"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3] text-slate-700 font-bold"
                     >
                       <option>Asia/Jakarta</option>
                       <option>Asia/Bangkok</option>
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                     <select
                       value={settings.language}
                       onChange={(e) => handleChange('language', e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59] text-slate-700 font-bold"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3] text-slate-700 font-bold"
                     >
                       <option value="id">Indonesia</option>
                       <option value="en">English</option>
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                     <select
                       value={settings.theme}
                       onChange={(e) => handleChange('theme', e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59] text-slate-700 font-bold"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3] text-slate-700 font-bold"
                     >
                       <option value="light">Terang</option>
                       <option value="dark">Gelap</option>
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                     <select
                       value={settings.alertSeverity}
                       onChange={(e) => handleChange('alertSeverity', e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#0f2d59] text-slate-700 font-bold"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#2f46a3] text-slate-700 font-bold"
                     >
                       <option value="all">Semua Alert</option>
                       <option value="high">Hanya Tinggi & Kritis</option>
@@ -360,7 +360,7 @@ export default function SettingsPage() {
                       type="number"
                       value={settings.consumptionThreshold}
                       onChange={(e) => handleChange('consumptionThreshold', parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
                     />
                   </SettingItem>
 
@@ -372,7 +372,7 @@ export default function SettingsPage() {
                       type="number"
                       value={settings.temperatureThreshold}
                       onChange={(e) => handleChange('temperatureThreshold', parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
                     />
                   </SettingItem>
 
@@ -384,7 +384,7 @@ export default function SettingsPage() {
                       type="number"
                       value={settings.costThreshold}
                       onChange={(e) => handleChange('costThreshold', parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
                     />
                   </SettingItem>
                 </div>
@@ -419,7 +419,7 @@ export default function SettingsPage() {
                       type="number"
                       value={settings.sessionTimeout}
                       onChange={(e) => handleChange('sessionTimeout', parseInt(e.target.value) || 0)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#2f46a3]"
                     />
                   </div>
                 </div>
@@ -438,7 +438,7 @@ export default function SettingsPage() {
                       type="email"
                       value={profile.email}
                       onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
                     />
                   </div>
 
@@ -448,7 +448,7 @@ export default function SettingsPage() {
                       type="text"
                       value={profile.full_name}
                       onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
                     />
                   </div>
 
@@ -459,18 +459,18 @@ export default function SettingsPage() {
                       placeholder="Kosongkan jika tidak ingin mengubah"
                       value={profile.password}
                       onChange={(e) => setProfile({ ...profile, password: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
                     />
                   </div>
 
                   <div className="rounded-lg bg-slate-100 border border-slate-200 p-4 text-xs font-bold text-slate-600">
-                    Role Aktif Anda: <span className="font-extrabold text-[#0f2d59] uppercase">{user?.role || '-'}</span>
+                    Role Aktif Anda: <span className="font-extrabold text-[#2f46a3] uppercase">{user?.role || '-'}</span>
                   </div>
 
                   <button
                     onClick={handleSaveProfile}
                     disabled={isProfileSaving}
-                    className="px-4 py-2.5 bg-[#0f2d59] hover:bg-teal-850 transition-all font-bold text-xs uppercase tracking-wider text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2.5 bg-[#2f46a3] hover:bg-teal-850 transition-all font-bold text-xs uppercase tracking-wider text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProfileSaving ? 'Menyimpan profil...' : 'Simpan Profil'}
                   </button>
@@ -516,7 +516,7 @@ function ToggleItem({ label, description, checked, icon, onChange }: any) {
       <button
         onClick={onChange}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-          checked ? 'bg-[#0f2d59]' : 'bg-slate-300'
+          checked ? 'bg-[#2f46a3]' : 'bg-slate-300'
         }`}
       >
         <span

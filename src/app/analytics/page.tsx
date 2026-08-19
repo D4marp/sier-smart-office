@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50" style={{
-      backgroundImage: 'url(/assets/bg_image.png)',
+      backgroundImage: 'url(/sier-building-bg.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
@@ -166,7 +166,7 @@ export default function AnalyticsPage() {
                     onClick={() => setSelectedClass(cls)}
                     className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${
                       selectedClass === cls
-                        ? 'bg-[#0f2d59] text-white shadow-sm'
+                        ? 'bg-[#2f46a3] text-white shadow-sm'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
                   onClick={() => setTimeRange(range)}
                   className={`px-3 py-1 rounded text-xs font-bold transition-all ${
                     timeRange === range
-                      ? 'bg-[#0f2d59] text-white shadow-sm'
+                      ? 'bg-[#2f46a3] text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -210,7 +210,7 @@ export default function AnalyticsPage() {
                     <YAxis stroke="#6b7280" />
                     <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
                     <Legend />
-                    <Line type="monotone" dataKey="ac" stroke="#d8ae47" strokeWidth={2} name="AC (kWh)" />
+                    <Line type="monotone" dataKey="ac" stroke="#7ca6ff" strokeWidth={2} name="AC (kWh)" />
                     <Line type="monotone" dataKey="lamp" stroke="#483688" strokeWidth={2} name="Lampu (kWh)" />
                   </LineChart>
                 </ResponsiveContainer>
@@ -225,7 +225,7 @@ export default function AnalyticsPage() {
                     <YAxis stroke="#6b7280" />
                     <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
                     <Legend />
-                    <Bar dataKey="ac" fill="#d8ae47" name="AC (kWh)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="ac" fill="#7ca6ff" name="AC (kWh)" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="lamp" fill="#483688" name="Lampu (kWh)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>

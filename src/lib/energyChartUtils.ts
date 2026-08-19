@@ -1,7 +1,5 @@
-// Helper bersama untuk dashboard energi fakultas: agregasi tanggal/minggu/bulan
-// dan format data untuk grafik Recharts. Dipakai oleh dashboard fakultas generik
-// (src/app/fakultas/[code]/page.tsx) agar setiap fakultas (Psikologi, FIKK, dst.)
-// memakai logika agregasi yang identik.
+// Helper bersama untuk dashboard energi gedung SIER: agregasi tanggal/minggu/
+// bulan dan format data untuk grafik Recharts (src/app/page.tsx).
 
 export interface Device {
   id: number

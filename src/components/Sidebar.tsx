@@ -1,72 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, Building2, Activity, Settings, LogOut } from 'lucide-react'
+import { Menu, LayoutDashboard, Activity, BarChart3, Bell, Users, Settings, LogOut } from 'lucide-react'
 import { useAuth } from './AuthProvider'
-import { tenantsAPI } from '@/lib/apiClient'
-import { getDashboardPathForTenant } from '@/lib/tenantDefaults'
-
-const TENANT_WORKSPACE_PATHS = ['/devices', '/analytics', '/alerts', '/users']
-
-type TenantSummary = {
-  code: string
-  name: string
-  campus?: string | null
-}
 
 interface SidebarProps {
   open: boolean
   onToggle: () => void
 }
 
-// Daftar fakultas ditentukan oleh akun yang login: superadmin (rektorat) melihat
-// semua fakultas aktif, user fakultas hanya melihat fakultasnya sendiri.
+const NAV_ITEMS = [
+  { href: '/', label: 'Dasbor', icon: LayoutDashboard },
+  { href: '/devices', label: 'Perangkat', icon: Activity },
+  { href: '/analytics', label: 'Analitik', icon: BarChart3 },
+  { href: '/alerts', label: 'Pemberitahuan', icon: Bell },
+  { href: '/users', label: 'Pengguna', icon: Users },
+]
+
 export default function Sidebar({ open, onToggle }: SidebarProps) {
   const pathname = usePathname()
-  const { user, activeTenant, logout, switchTenant } = useAuth()
-  const [tenants, setTenants] = useState<TenantSummary[]>([])
-  const isSuperadmin = user?.role === 'superadmin' && !user?.tenant_code
-
-  useEffect(() => {
-    if (isSuperadmin) {
-      tenantsAPI.getAll().then(setTenants).catch(() => setTenants([]))
-    } else if (user?.tenant_code) {
-      setTenants([{ code: user.tenant_code, name: user.tenant_name || user.tenant_code }])
-    }
-  }, [isSuperadmin, user?.tenant_code, user?.tenant_name])
-
-  const facultyHref = (code: string) => getDashboardPathForTenant(code)
-  const isWorkspacePath = TENANT_WORKSPACE_PATHS.includes(pathname)
-  const activeTenantCode = isSuperadmin ? activeTenant : user?.tenant_code
-  const isFacultyActive = (code: string) =>
-    pathname === facultyHref(code) ||
-    (isWorkspacePath && activeTenantCode === code)
-
-  const sectionLinkClass = (href: string) =>
-    `block py-1.5 px-3 text-xs rounded transition-all ${
-      pathname === href ? 'font-semibold text-white bg-white/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-    }`
+  const { logout } = useAuth()
 
   return (
     <aside
       className={`${
         open ? 'w-64' : 'w-20'
-      } bg-[#0f2d59] text-white transition-all duration-300 flex flex-col shadow-xl relative z-20 border-r-4 border-r-[#d8ae47]`}
+      } bg-[#2f46a3] text-white transition-all duration-300 flex flex-col shadow-xl relative z-20 border-r-4 border-r-[#7ca6ff]`}
     >
       <div className="p-4 flex items-center justify-between border-b border-white/10">
         {open && (
-          <div className="flex-1 w-full h-auto">
-            <Image
-              src="/logo_unesa.png"
-              alt="UNESA Logo"
-              width={240}
-              height={80}
-              priority
-              className="w-full h-auto object-contain brightness-110"
-            />
+          <div className="flex-1 w-full h-auto flex items-center gap-2">
+            <Image src="/sier-logo.jpg" alt="Logo SIER" width={32} height={42} priority className="object-contain rounded" />
+            <div className="leading-tight">
+              <p className="text-sm font-extrabold tracking-tight">PT SIER</p>
+              <p className="text-[10px] text-white/60 uppercase tracking-wider">Smart Office</p>
+            </div>
           </div>
         )}
         <button onClick={onToggle} className="p-2 hover:bg-white/10 rounded transition-all ml-auto">
@@ -75,57 +45,19 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {isSuperadmin && (
-          <Link
-            href="/"
-            className={`flex items-center space-x-3 px-4 py-3 rounded transition-all ${
-              pathname === '/' ? 'bg-white/10 text-white font-bold' : 'text-white/70 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <Building2 size={20} className={pathname === '/' ? 'text-[#f1c40f]' : ''} />
-            {open && <span className="text-sm">Dasbor Rektorat</span>}
-          </Link>
-        )}
-
-        {tenants.map((t) => {
-          const active = isFacultyActive(t.code)
+        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href
           return (
-            <div key={t.code} className="space-y-1">
-              <Link
-                href={facultyHref(t.code)}
-                onClick={() => switchTenant(t.code)}
-                className={`flex items-center space-x-3 px-4 py-2.5 rounded transition-all ${
-                  active ? 'bg-white/10 text-white font-bold' : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Activity size={18} className={active ? 'text-[#f1c40f]' : ''} />
-                {open && <span className="text-sm truncate">{t.name}</span>}
-              </Link>
-
-              {open && active && (
-                <div className="pl-8 space-y-1 border-l border-white/10 ml-6">
-                  <Link
-                    href={facultyHref(t.code)}
-                    onClick={() => switchTenant(t.code)}
-                    className={sectionLinkClass(facultyHref(t.code))}
-                  >
-                    Dasbor
-                  </Link>
-                  <Link href="/devices" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/devices')}>
-                    Perangkat
-                  </Link>
-                  <Link href="/analytics" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/analytics')}>
-                    Analitik
-                  </Link>
-                  <Link href="/alerts" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/alerts')}>
-                    Pemberitahuan
-                  </Link>
-                  <Link href="/users" onClick={() => switchTenant(t.code)} className={sectionLinkClass('/users')}>
-                    Pengguna
-                  </Link>
-                </div>
-              )}
-            </div>
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center space-x-3 px-4 py-3 rounded transition-all ${
+                active ? 'bg-white/10 text-white font-bold' : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <Icon size={20} className={active ? 'text-[#7ca6ff]' : ''} />
+              {open && <span className="text-sm">{label}</span>}
+            </Link>
           )
         })}
       </nav>

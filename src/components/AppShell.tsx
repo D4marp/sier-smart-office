@@ -3,27 +3,16 @@
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { AuthProvider, useAuth } from './AuthProvider'
-import { getDashboardPathForTenant } from '@/lib/tenantDefaults'
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, loading } = useAuth()
-  const userDashboardPath = user ? getDashboardPathForTenant(user.tenant_code) : '/login'
-  const isFacultyRoute = pathname.startsWith('/fakultas/')
-  const requestedFacultyCode = isFacultyRoute ? pathname.split('/')[2]?.toLowerCase() : null
-  const shouldRedirectTenantUser =
-    !!user &&
-    user.role !== 'superadmin' &&
-    (
-      pathname === '/' ||
-      (requestedFacultyCode && requestedFacultyCode !== user.tenant_code)
-    )
+
   const shouldHoldProtectedRender =
     loading ||
     (!user && pathname !== '/login') ||
-    (user && pathname === '/login') ||
-    shouldRedirectTenantUser
+    (user && pathname === '/login')
 
   useEffect(() => {
     if (loading) {
@@ -35,15 +24,10 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       return
     }
 
-    if (shouldRedirectTenantUser) {
-      router.replace(userDashboardPath)
-      return
-    }
-
     if (user && pathname === '/login') {
-      router.replace(userDashboardPath)
+      router.replace('/')
     }
-  }, [loading, user, pathname, router, shouldRedirectTenantUser, userDashboardPath])
+  }, [loading, user, pathname, router])
 
   if (shouldHoldProtectedRender) {
     return (

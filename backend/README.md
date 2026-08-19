@@ -1,6 +1,6 @@
-# Smart Energy Dashboard - Backend API
+# SIER Smart Office Dashboard - Backend API
 
-Backend API untuk Smart Energy Dashboard UNESA dengan teknologi Express.js dan MySQL.
+Backend API untuk Smart Office Energy Dashboard PT SIER (Persero) dengan teknologi Express.js dan MySQL.
 
 ## 📋 Prerequisites
 
@@ -19,15 +19,17 @@ Backend API untuk Smart Energy Dashboard UNESA dengan teknologi Express.js dan M
 mysql -u root -p
 
 # Kemudian jalankan script database
-source /Users/HCMPublic/Kuliah/Unesa\ Dashboard/backend/database/schema.sql
+source backend/database/schema.sql
 ```
 
-Atau gunakan MySQL Workbench untuk import file `database/schema.sql`
+Atau gunakan MySQL Workbench untuk import file `database/schema.sql`, lalu isi
+data ruangan & perangkat SIER dengan `database/seed_sier.sql`. Bisa juga
+langsung jalankan `node scripts/setup_sier.js` untuk melakukan keduanya sekaligus.
 
 ### 2. Install Dependencies
 
 ```bash
-cd /Users/HCMPublic/Kuliah/Unesa\ Dashboard/backend
+cd backend
 npm install
 ```
 
@@ -39,9 +41,9 @@ Edit file `.env` dengan konfigurasi database Anda:
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
-DB_NAME=smart_energy_dashboard
-DB_PORT=3030
-PORT=5000
+DB_NAME=smart_energy_sier
+DB_PORT=3306
+PORT=5001
 NODE_ENV=development
 ```
 
@@ -57,13 +59,13 @@ npm run dev
 npm start
 ```
 
-Server akan berjalan di `http://localhost:5000`
+Server akan berjalan di `http://localhost:5001`
 
 ## 📚 API Documentation
 
 ### Base URL
 ```
-http://localhost:5000/api/v1
+http://localhost:5001/api/v1
 ```
 
 ### 1. **Classes (Ruangan/Kelas)**
@@ -604,14 +606,14 @@ Di file frontend Next.js, tambahkan environment variable:
 
 **`.env.local` di folder frontend:**
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
 ```
 
 ### 2. Buat API Service di Frontend
 
 **`src/services/api.ts`:**
 ```typescript
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
 
 export const api = {
   // Classes
@@ -642,8 +644,8 @@ export const api = {
 ## 📊 Sample Data
 
 Database sudah terisi dengan:
-- 5 Kelas (Kelas A - E)
-- 10 Devices (AC Unit dan Lighting untuk setiap kelas)
+- 19 ruangan gedung SIER (Ruang Meeting Red/Green/Blue, Ruang Direksi RDP/RRW, Ruang Kadiv 1-11, Toilet Lt 5, Tambahan Ruang Lt 4)
+- 129 perangkat Milesight/ATEN/Broadlink (lihat `database/seed_sier.sql`)
 - Default settings untuk sistem
 
 Untuk menambahkan consumption data, gunakan endpoint bulk insert atau generate secara real-time dari IoT devices.
@@ -652,17 +654,17 @@ Untuk menambahkan consumption data, gunakan endpoint bulk insert atau generate s
 
 ### MySQL Connection Error
 ```
-Error: connect ECONNREFUSED 127.0.0.1:3030
+Error: connect ECONNREFUSED 127.0.0.1:3306
 ```
 **Solusi:**
 - Pastikan MySQL server sudah running
 - Cek konfigurasi database di `.env`
-- Pastikan database `smart_energy_dashboard` sudah dibuat
+- Pastikan database `smart_energy_sier` sudah dibuat
 
-### Port 5000 Already in Use
+### Port 5001 Already in Use
 **Solusi:**
 - Ubah PORT di `.env`
-- Atau kill process yang menggunakan port 5000
+- Atau kill process yang menggunakan port 5001
 
 ### Module Not Found
 **Solusi:**

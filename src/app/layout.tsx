@@ -9,8 +9,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Smart Energy Dashboard',
-  description: 'Professional Energy Consumption Monitoring Dashboard',
+  title: 'SIER Smart Office Dashboard',
+  description: 'Dashboard pemantauan & kontrol energi gedung kantor PT SIER (Persero)',
 }
 
 export default function RootLayout({

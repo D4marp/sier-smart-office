@@ -3,7 +3,7 @@
  * Handles all backend API requests
  */
 
-import { getDefaultTenantForHost } from './tenantDefaults';
+import { SIER_TENANT_CODE } from './tenantDefaults';
 
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
@@ -13,15 +13,13 @@ const API_BASE_URL = configuredApiBaseUrl || (
     : 'http://localhost:5001/api/v1'
 );
 
-// ============ MULTI-TENANT (satu database per fakultas) ============
+// ============ TENANT TUNGGAL (gedung kantor SIER) ============
 // Tenant aktif dikirim ke backend lewat header X-Tenant.
-// User fakultas otomatis terkunci pada tenant-nya; superadmin (rektorat)
-// bisa berpindah tenant lewat switcher.
 const TENANT_STORAGE_KEY = 'active_tenant';
 
 export function getActiveTenant(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(TENANT_STORAGE_KEY) || getDefaultTenantForHost();
+  return window.localStorage.getItem(TENANT_STORAGE_KEY) || SIER_TENANT_CODE;
 }
 
 export function setActiveTenant(code: string | null) {
@@ -435,7 +433,7 @@ export const usersAPI = {
   },
 };
 
-// ============ TENANTS API (registry rektorat) ============
+// ============ TENANTS API (registry) ============
 export const tenantsAPI = {
   getAll: async () => {
     const response = await apiCall<{ success: boolean; data: any[] }>('/tenants');
@@ -458,7 +456,7 @@ export const tenantsAPI = {
     return response.data;
   },
 
-  // Rollup lintas-fakultas untuk rektorat (superadmin)
+  // Rollup untuk superadmin
   overview: async (date?: string) => {
     const query = date ? `?date=${date}` : '';
     const response = await apiCall<{ success: boolean; data: any }>(`/tenants/overview${query}`);

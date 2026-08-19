@@ -310,7 +310,7 @@ export default function DevicesPage() {
 
   return (
     <div className="flex h-screen bg-gray-50" style={{
-      backgroundImage: 'url(/assets/bg_image.png)',
+      backgroundImage: 'url(/sier-building-bg.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
@@ -346,7 +346,7 @@ export default function DevicesPage() {
                     onClick={() => setSelectedClass(cls)}
                     className={`px-3 py-1.5 rounded text-xs font-bold transition-all ${
                       selectedClass === cls
-                        ? 'bg-[#0f2d59] text-white shadow-sm'
+                        ? 'bg-[#2f46a3] text-white shadow-sm'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >

@@ -109,7 +109,7 @@ export default function AlertsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50" style={{
-      backgroundImage: 'url(/assets/bg_image.png)',
+      backgroundImage: 'url(/sier-building-bg.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
@@ -147,7 +147,7 @@ export default function AlertsPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none focus:border-[#0f2d59]"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-xs font-bold text-slate-700 bg-slate-50 focus:outline-none focus:border-[#2f46a3]"
               >
                 <option value="all">Semua Status</option>
                 <option value="unread">Belum Dibaca</option>

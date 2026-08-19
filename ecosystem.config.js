@@ -27,8 +27,10 @@ module.exports = {
       }
     },
     {
+      // Sesuaikan path ini dengan lokasi instalasi node-red di mesin deploy SIER
+      // (mis. lewat `npm root -g` + '/node-red/red.js').
       name: 'node-red',
-      script: 'C:/Users/FIP Unesa/AppData/Roaming/npm/node_modules/node-red/red.js',
+      script: 'node-red',
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,

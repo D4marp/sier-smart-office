@@ -1,6 +1,6 @@
 -- Create database
-CREATE DATABASE IF NOT EXISTS smart_energy_dashboard;
-USE smart_energy_dashboard;
+CREATE DATABASE IF NOT EXISTS smart_energy_sier;
+USE smart_energy_sier;
 
 -- Classes/Ruangan table
 CREATE TABLE IF NOT EXISTS classes (
@@ -244,48 +244,10 @@ CREATE TABLE IF NOT EXISTS iot_downlink_messages (
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default classes
-INSERT INTO classes (name, description) VALUES 
-('Q1.01.02', 'Ruang Q1.01.02'),
-('Q1.01.03', 'Ruang Q1.01.03'),
-('Q1.01.04', 'Ruang Q1.01.04'),
-('Q1.01.09', 'Ruang Q1.01.09'),
-('Q1.01.11', 'Ruang Q1.01.11');
-
--- Insert IoT devices via payload format
--- These INSERT statements simulate devices registered via IoT platform
-INSERT INTO devices (class_id, device_eui, device_name, device_type, application_type, location, device_secret, power_rating, efficiency_rating, iot_status) 
-SELECT id, 'AC-Q10102-001', 'AC Unit Q1.01.02', 'AC', 'climate-control', 'Q1.01.02', 'secret_ac_q10102_001', 3.0, 91, 'active' FROM classes WHERE name = 'Q1.01.02'
-UNION ALL
-SELECT id, 'LAMP-Q10102-001', 'Lighting Q1.01.02', 'LAMP', 'lighting-control', 'Q1.01.02', 'secret_lamp_q10102_001', 1.6, 94, 'active' FROM classes WHERE name = 'Q1.01.02'
-UNION ALL
-SELECT id, 'AC-Q10103-001', 'AC Unit Q1.01.03', 'AC', 'climate-control', 'Q1.01.03', 'secret_ac_q10103_001', 3.0, 89, 'active' FROM classes WHERE name = 'Q1.01.03'
-UNION ALL
-SELECT id, 'LAMP-Q10103-001', 'Lighting Q1.01.03', 'LAMP', 'lighting-control', 'Q1.01.03', 'secret_lamp_q10103_001', 1.6, 92, 'active' FROM classes WHERE name = 'Q1.01.03'
-UNION ALL
-SELECT id, 'AC-Q10104-001', 'AC Unit Q1.01.04', 'AC', 'climate-control', 'Q1.01.04', 'secret_ac_q10104_001', 3.0, 90, 'active' FROM classes WHERE name = 'Q1.01.04'
-UNION ALL
-SELECT id, 'LAMP-Q10104-001', 'Lighting Q1.01.04', 'LAMP', 'lighting-control', 'Q1.01.04', 'secret_lamp_q10104_001', 1.6, 95, 'active' FROM classes WHERE name = 'Q1.01.04'
-UNION ALL
-SELECT id, 'AC-Q10109-001', 'AC Unit Q1.01.09', 'AC', 'climate-control', 'Q1.01.09', 'secret_ac_q10109_001', 3.0, 91, 'active' FROM classes WHERE name = 'Q1.01.09'
-UNION ALL
-SELECT id, 'LAMP-Q10109-001', 'Lighting Q1.01.09', 'LAMP', 'lighting-control', 'Q1.01.09', 'secret_lamp_q10109_001', 1.6, 93, 'active' FROM classes WHERE name = 'Q1.01.09'
-UNION ALL
-SELECT id, 'AC-Q10111-001', 'AC Unit Q1.01.11', 'AC', 'climate-control', 'Q1.01.11', 'secret_ac_q10111_001', 3.0, 88, 'active' FROM classes WHERE name = 'Q1.01.11'
-UNION ALL
-SELECT id, 'LAMP-Q10111-001', 'Lighting Q1.01.11', 'LAMP', 'lighting-control', 'Q1.01.11', 'secret_lamp_q10111_001', 1.6, 91, 'active' FROM classes WHERE name = 'Q1.01.11';
-
--- Insert VS321 sensor devices (temperature + humidity)
-INSERT IGNORE INTO devices (class_id, device_eui, device_name, device_type, application_type, location, device_secret, power_rating, efficiency_rating, iot_status)
-SELECT id, 'VS321-Q10102-001', 'Sensor Suhu Q1.01.02', 'SENSOR', 'environment-sensor', 'Q1.01.02', 'secret_vs321_q10102_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.02'
-UNION ALL
-SELECT id, 'VS321-Q10103-001', 'Sensor Suhu Q1.01.03', 'SENSOR', 'environment-sensor', 'Q1.01.03', 'secret_vs321_q10103_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.03'
-UNION ALL
-SELECT id, 'VS321-Q10104-001', 'Sensor Suhu Q1.01.04', 'SENSOR', 'environment-sensor', 'Q1.01.04', 'secret_vs321_q10104_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.04'
-UNION ALL
-SELECT id, 'VS321-Q10109-001', 'Sensor Suhu Q1.01.09', 'SENSOR', 'environment-sensor', 'Q1.01.09', 'secret_vs321_q10109_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.09'
-UNION ALL
-SELECT id, 'VS321-Q10111-001', 'Sensor Suhu Q1.01.11', 'SENSOR', 'environment-sensor', 'Q1.01.11', 'secret_vs321_q10111_001', 0.1, 100, 'active' FROM classes WHERE name = 'Q1.01.11';
+-- Ruangan & perangkat SIER: jalankan backend/database/seed_sier.sql setelah
+-- schema ini, berisi 19 ruangan (Ruang Meeting Red/Green/Blue, Ruang Direksi
+-- RDP/RRW, Ruang Kadiv 1-11, Toilet Lt 5, Tambahan Ruang Lt 4) dan seluruh
+-- perangkat Milesight/ATEN/Broadlink sesuai bagan Smart Meeting Room ICT.
 
 -- Insert default settings
 INSERT INTO settings (setting_key, setting_value, data_type, description) VALUES
@@ -296,6 +258,6 @@ INSERT INTO settings (setting_key, setting_value, data_type, description) VALUES
 ('temperature_alert_threshold', '70', 'integer', 'Alert threshold for temperature'),
 ('data_retention_days', '90', 'integer', 'Number of days to retain consumption data');
 
--- Default SaaS admin account
+-- Default SaaS admin account (ganti password setelah login pertama)
 INSERT IGNORE INTO users (full_name, email, password, role, is_active) VALUES
-('System Administrator', 'admin@unesa.ac.id', '$2a$10$u0YP0gkl1Yl2jMrO6dWMr.24Bcwz7mYb6bW8tTnSf527jZ0dx3DwK', 'admin', TRUE);
+('Admin SIER', 'admin@sier.id', '$2a$10$u0YP0gkl1Yl2jMrO6dWMr.24Bcwz7mYb6bW8tTnSf527jZ0dx3DwK', 'admin', TRUE);

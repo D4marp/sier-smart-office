@@ -1,7 +1,7 @@
 {
   "name": "smart-energy-dashboard-backend",
   "version": "1.0.0",
-  "description": "Backend API untuk Smart Energy Dashboard UNESA",
+  "description": "Backend API untuk Smart Office Energy Dashboard PT SIER (Persero)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

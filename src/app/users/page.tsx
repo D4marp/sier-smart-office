@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Trash2, Plus } from 'lucide-react'
-import { usersAPI, tenantsAPI } from '@/lib/apiClient'
+import { usersAPI } from '@/lib/apiClient'
 import { useAuth } from '@/components/AuthProvider'
+import { SIER_TENANT_CODE } from '@/lib/tenantDefaults'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
 
@@ -21,11 +22,6 @@ type UserRecord = {
   tenant_name?: string | null
 }
 
-type TenantOption = {
-  code: string
-  name: string
-}
-
 export default function UsersPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -34,8 +30,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [form, setForm] = useState({ full_name: '', email: '', password: '', role: 'viewer' as UserRole, tenant_code: '' })
-  const [tenants, setTenants] = useState<TenantOption[]>([])
+  const [form, setForm] = useState({ full_name: '', email: '', password: '', role: 'viewer' as UserRole })
 
   const isSuperadmin = user?.role === 'superadmin'
   const canManage = user?.role === 'admin' || isSuperadmin
@@ -56,21 +51,18 @@ export default function UsersPage() {
     if (canManage) {
       loadUsers()
     }
-    if (isSuperadmin) {
-      tenantsAPI.getAll().then(setTenants).catch(() => setTenants([]))
-    }
-  }, [canManage, isSuperadmin])
+  }, [canManage])
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault()
     try {
       setSaving(true)
       const payload: Record<string, unknown> = { ...form }
-      if (form.role === 'superadmin' || !form.tenant_code) {
-        delete payload.tenant_code
+      if (form.role !== 'superadmin') {
+        payload.tenant_code = SIER_TENANT_CODE
       }
       await usersAPI.create(payload)
-      setForm({ full_name: '', email: '', password: '', role: 'viewer', tenant_code: '' })
+      setForm({ full_name: '', email: '', password: '', role: 'viewer' })
       await loadUsers()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menambah user')
@@ -108,7 +100,7 @@ export default function UsersPage() {
 
   return (
     <div className="flex h-screen bg-gray-50" style={{
-      backgroundImage: 'url(/assets/bg_image.png)',
+      backgroundImage: 'url(/sier-building-bg.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
@@ -153,33 +145,18 @@ export default function UsersPage() {
                     <select 
                       value={form.role} 
                       onChange={(e) => setForm({ ...form, role: e.target.value as any })} 
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none text-sm focus:border-[#0f2d59] font-bold text-slate-700"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none text-sm focus:border-[#2f46a3] font-bold text-slate-700"
                     >
                       <option value="viewer">Viewer</option>
                       <option value="manager">Manager</option>
                       <option value="admin">Admin</option>
-                      {isSuperadmin && <option value="superadmin">Superadmin (Rektorat)</option>}
+                      {isSuperadmin && <option value="superadmin">Superadmin</option>}
                     </select>
                   </div>
-                  {isSuperadmin && form.role !== 'superadmin' && (
-                    <div>
-                      <label className="mb-2 block text-xs font-bold text-slate-500 uppercase">Fakultas</label>
-                      <select
-                        value={form.tenant_code}
-                        onChange={(e) => setForm({ ...form, tenant_code: e.target.value })}
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 outline-none text-sm focus:border-[#0f2d59] font-bold text-slate-700"
-                      >
-                        <option value="">Pilih fakultas...</option>
-                        {tenants.map((t) => (
-                          <option key={t.code} value={t.code}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
                   {error && <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 font-bold">{error}</div>}
                   <button 
                     disabled={saving} 
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#0f2d59] hover:bg-teal-800 transition-all px-4 py-2.5 font-bold text-xs uppercase tracking-wider text-white disabled:opacity-70"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#2f46a3] hover:bg-teal-800 transition-all px-4 py-2.5 font-bold text-xs uppercase tracking-wider text-white disabled:opacity-70"
                   >
                     <Plus size={16} />
                     {saving ? 'Menyimpan...' : 'Tambah User'}
@@ -203,7 +180,7 @@ export default function UsersPage() {
                             {item.role}
                           </span>
                           <span className="inline-block mt-2 ml-1 text-[10px] uppercase font-extrabold tracking-wider bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded">
-                            {item.role === 'superadmin' ? 'rektorat' : item.tenant_name || item.tenant_code || '-'}
+                            {item.role === 'superadmin' ? 'akses penuh' : item.tenant_name || item.tenant_code || '-'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -244,7 +221,7 @@ function Input({ label, value, onChange, type = 'text' }: { label: string; value
         type={type} 
         value={value} 
         onChange={(e) => onChange(e.target.value)} 
-        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-[#0f2d59]" 
+        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-[#2f46a3]" 
       />
     </div>
   )
