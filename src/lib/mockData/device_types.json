@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "code": "GATEWAY",
+    "icon": "router",
+    "label": "Gateway LoRaWAN",
+    "status": "active",
+    "category": "gateway",
+    "controllable": 0
+  },
+  {
+    "id": 2,
+    "code": "LAMP",
+    "icon": "lightbulb",
+    "label": "Smart Wall Switch (Lampu)",
+    "status": "active",
+    "category": "lighting",
+    "controllable": 1
+  },
+  {
+    "id": 3,
+    "code": "SOCKET",
+    "icon": "plug",
+    "label": "Smart Socket",
+    "status": "active",
+    "category": "power",
+    "controllable": 0
+  },
+  {
+    "id": 4,
+    "code": "CONTROLLER",
+    "icon": "cpu",
+    "label": "Control System Box",
+    "status": "active",
+    "category": "controller",
+    "controllable": 0
+  },
+  {
+    "id": 5,
+    "code": "SENSOR",
+    "icon": "radar",
+    "label": "Sensor Presence / Motion & TH",
+    "status": "active",
+    "category": "sensor",
+    "controllable": 0
+  },
+  {
+    "id": 6,
+    "code": "AC",
+    "icon": "wind",
+    "label": "Air Conditioner",
+    "status": "active",
+    "category": "climate",
+    "controllable": 1
+  },
+  {
+    "id": 7,
+    "code": "INTERFACE",
+    "icon": "tablet",
+    "label": "Tablet Kontrol",
+    "status": "active",
+    "category": "interface",
+    "controllable": 0
+  }
+]

@@ -92,6 +92,12 @@ export default function LoginPage() {
               <p className="text-sm text-red-600">{error}</p>
             )}
 
+            {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+              <p className="text-xs text-slate-400">
+                Mode demo — masuk dengan <span className="font-semibold text-slate-500">admin@sier.id</span> / <span className="font-semibold text-slate-500">sier12345</span>
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={loading}

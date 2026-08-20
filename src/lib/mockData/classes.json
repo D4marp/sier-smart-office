@@ -1,0 +1,192 @@
+[
+  {
+    "id": 1,
+    "area": null,
+    "name": "Ruang Meeting Red",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 10,
+    "description": "Ruang meeting SIER dengan kontrol lampu, soket, dan sensor presence via tablet Android"
+  },
+  {
+    "id": 2,
+    "area": null,
+    "name": "Ruang Meeting Green",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 10,
+    "description": "Ruang meeting SIER dengan kontrol lampu, soket, dan sensor presence via tablet Android"
+  },
+  {
+    "id": 3,
+    "area": null,
+    "name": "Ruang Meeting Blue",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 10,
+    "description": "Ruang meeting SIER dengan kontrol lampu, soket, dan sensor presence via tablet Android"
+  },
+  {
+    "id": 4,
+    "area": null,
+    "name": "Tambahan Ruang Lt 4",
+    "floor": 4,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": null,
+    "description": "Penambahan sensor IoT lantai 4: gateway, panel switch, sensor presence, dan 6 smart socket"
+  },
+  {
+    "id": 5,
+    "area": null,
+    "name": "Ruang Direksi RDP",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 6,
+    "description": "Ruang direksi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 6,
+    "area": null,
+    "name": "Ruang Direksi RRW",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 6,
+    "description": "Ruang direksi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 7,
+    "area": null,
+    "name": "Lantai 5 Toilet 1",
+    "floor": 5,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": null,
+    "description": "Monitoring motion, suhu/kelembapan, dan energi AC toilet lantai 5"
+  },
+  {
+    "id": 8,
+    "area": null,
+    "name": "Lantai 5 Toilet 2",
+    "floor": 5,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": null,
+    "description": "Monitoring motion, suhu/kelembapan, dan energi AC toilet lantai 5"
+  },
+  {
+    "id": 9,
+    "area": null,
+    "name": "Ruang Kadiv 1",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 10,
+    "area": null,
+    "name": "Ruang Kadiv 2",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 11,
+    "area": null,
+    "name": "Ruang Kadiv 3",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 12,
+    "area": null,
+    "name": "Ruang Kadiv 4",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 13,
+    "area": null,
+    "name": "Ruang Kadiv 5",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 14,
+    "area": null,
+    "name": "Ruang Kadiv 6",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 15,
+    "area": null,
+    "name": "Ruang Kadiv 7",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 16,
+    "area": null,
+    "name": "Ruang Kadiv 8",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 17,
+    "area": null,
+    "name": "Ruang Kadiv 9",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 18,
+    "area": null,
+    "name": "Ruang Kadiv 10",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  },
+  {
+    "id": 19,
+    "area": null,
+    "name": "Ruang Kadiv 11",
+    "floor": null,
+    "status": "active",
+    "building": "Gedung Kantor SIER",
+    "capacity": 3,
+    "description": "Ruang kepala divisi dengan kontrol lampu, AC (Broadlink RM4 Pro), dan sensor presence"
+  }
+]

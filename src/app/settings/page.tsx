@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Settings, Save, ChevronRight, Bell, Lock, Eye, Mail, Smartphone, AlertCircle, Menu } from 'lucide-react'
 import { authAPI, settingsAPI, APIError } from '@/lib/apiClient'
+import { resetDemoData } from '@/lib/mockBackend'
 import { useAuth } from '@/components/AuthProvider'
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '@/components/DashboardHeader'
@@ -474,6 +475,28 @@ export default function SettingsPage() {
                   >
                     {isProfileSaving ? 'Menyimpan profil...' : 'Simpan Profil'}
                   </button>
+
+                  {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' && (
+                    <>
+                      <hr className="my-6 border-slate-200" />
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-700 mb-1">Mode Demo</h4>
+                        <p className="text-xs text-slate-400 mb-2">
+                          Kembalikan seluruh data demo (perangkat, user, pemberitahuan, penghuni ruangan, jadwal) ke kondisi awal seolah baru pertama dibuka.
+                        </p>
+                        <button
+                          onClick={() => {
+                            if (!confirm('Reset seluruh data demo ke kondisi awal? Perubahan yang dibuat selama sesi ini akan hilang.')) return
+                            resetDemoData()
+                            window.location.reload()
+                          }}
+                          className="px-4 py-2 border border-amber-400 text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-all text-xs font-bold uppercase tracking-wider"
+                        >
+                          Reset Data Demo
+                        </button>
+                      </div>
+                    </>
+                  )}
 
                   <hr className="my-6 border-slate-200" />
 

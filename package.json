@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:demo": "NEXT_PUBLIC_DEMO_MODE=true NEXT_OUTPUT_MODE=export next build",
     "start": "next start -p 3001",
     "lint": "eslint ."
   },

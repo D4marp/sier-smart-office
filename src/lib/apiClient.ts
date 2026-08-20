@@ -4,6 +4,16 @@
  */
 
 import { SIER_TENANT_CODE } from './tenantDefaults';
+import { APIError } from './apiError';
+import { mockApiCall } from './mockBackend';
+
+// Mode demo: build statis tanpa backend sama sekali (lihat next.config.js dan
+// package.json "build:demo"). Semua request lewat apiCall() di bawah
+// dialihkan ke mock in-browser (src/lib/mockBackend.ts) alih-alih fetch()
+// sungguhan. NEXT_PUBLIC_* di-inline oleh Next.js saat build, jadi ini harus
+// diset pada invocation `next build` itu sendiri (bukan cukup lewat .env saja
+// saat runtime).
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
@@ -31,25 +41,17 @@ export function setActiveTenant(code: string | null) {
   }
 }
 
-// Error handler
-class APIError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public data?: any
-  ) {
-    super(message);
-    this.name = 'APIError';
-  }
-}
-
 // Generic fetch wrapper
 async function apiCall<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  if (DEMO_MODE) {
+    return mockApiCall(endpoint, options) as Promise<T>;
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const activeTenant = getActiveTenant();
 
   const response = await fetch(url, {
@@ -650,3 +652,4 @@ export const nodeRedControlAPI = {
 
 // ============ EXPORT ERROR CLASS ============
 export { APIError };
+export { DEMO_MODE };
