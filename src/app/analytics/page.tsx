@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'
     }}>
-      <div className="absolute inset-0 bg-white/40 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-white/95 pointer-events-none"></div>
 
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
